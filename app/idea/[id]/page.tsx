@@ -5,21 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Check, X, ArrowLeft } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { InvestmentCategory } from '@/types/investment';
-
-async function getInvestmentData() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/investments`, {
-    cache: 'no-store'
-  });
-  if (!res.ok) {
-    throw new Error('Failed to fetch investments');
-  }
-  return res.json();
-}
+import { investmentData } from '@/data/investments';
 
 export default async function IdeaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const investmentData: InvestmentCategory[] = await getInvestmentData();
   const allIdeas = investmentData.flatMap((category) => category.ideas);
   const idea = allIdeas.find((i) => i.id === id);
 
