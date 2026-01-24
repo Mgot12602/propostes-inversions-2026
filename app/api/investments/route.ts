@@ -4,21 +4,10 @@ import { investmentData as initialData } from '@/data/investments';
 import fs from 'fs';
 import path from 'path';
 
-const isProduction = process.env.NETLIFY === 'true';
+const isLocal = process.env.NODE_ENV === 'development';
 const dataFilePath = path.join(process.cwd(), 'data', 'investments.json');
 
-async function getDataFromBlobs() {
-  const { getStore } = await import('@netlify/blobs');
-  const store = getStore('investments');
-  const data = await store.get('data', { type: 'json' });
-  
-  if (!data) {
-    await store.setJSON('data', initialData);
-    return initialData;
-  }
-  
-  return data;
-}
+let cachedData: InvestmentCategory[] | null = null;
 
 function getDataFromFile() {
   try {
@@ -35,18 +24,20 @@ function getDataFromFile() {
 
 export async function GET() {
   try {
-    const data = isProduction ? await getDataFromBlobs() : getDataFromFile();
-    return NextResponse.json(data);
+    if (isLocal) {
+      return NextResponse.json(getDataFromFile());
+    }
+    
+    if (cachedData) {
+      return NextResponse.json(cachedData);
+    }
+    
+    cachedData = initialData;
+    return NextResponse.json(cachedData);
   } catch (error) {
     console.error('Error reading investments:', error);
     return NextResponse.json(initialData);
   }
-}
-
-async function saveDataToBlobs(data: InvestmentCategory[]) {
-  const { getStore } = await import('@netlify/blobs');
-  const store = getStore('investments');
-  await store.setJSON('data', data);
 }
 
 function saveDataToFile(data: InvestmentCategory[]) {
@@ -58,9 +49,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { categoryId, ideaId, updatedIdea } = body;
 
-    const data: InvestmentCategory[] = isProduction 
-      ? await getDataFromBlobs() 
-      : getDataFromFile();
+    const data: InvestmentCategory[] = isLocal ? getDataFromFile() : (cachedData || initialData);
 
     const categoryIndex = data.findIndex(cat => cat.id === categoryId);
     if (categoryIndex === -1) {
@@ -77,10 +66,10 @@ export async function POST(request: Request) {
       ...updatedIdea,
     };
 
-    if (isProduction) {
-      await saveDataToBlobs(data);
-    } else {
+    if (isLocal) {
       saveDataToFile(data);
+    } else {
+      cachedData = data;
     }
 
     return NextResponse.json({ success: true, data });
