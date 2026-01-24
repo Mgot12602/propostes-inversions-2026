@@ -303,7 +303,7 @@ export default function AdminPage() {
                               <div>
                                 <Label>Galeria d&apos;imatges</Label>
                                 <div className="grid grid-cols-3 gap-2 mt-2">
-                                  {idea.images.map((img, idx) => (
+                                  {idea.images && idea.images.length > 0 && idea.images.map((img, idx) => (
                                     <div
                                       key={idx}
                                       className="aspect-video bg-slate-200 rounded overflow-hidden relative group"

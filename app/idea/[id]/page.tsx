@@ -44,16 +44,18 @@ export default async function IdeaPage({ params }: { params: Promise<{ id: strin
 
             <div className="px-10 py-10">
               <section className="mb-12">
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <h2 className="text-3xl font-bold text-white mb-6">Galeria</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {idea.images.map((image, index) => (
                     <div
                       key={index}
-                      className="aspect-video bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl flex items-center justify-center text-slate-400 border-2 border-dashed border-slate-600 hover:border-slate-500 transition-colors"
+                      className="aspect-video bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl overflow-hidden border-2 border-slate-600 hover:border-blue-500 transition-all hover:scale-105"
                     >
-                      <div className="text-center">
-                        <p className="text-base font-medium">Imatge {index + 1}</p>
-                        <p className="text-sm mt-1">Espai per a mitjans</p>
-                      </div>
+                      <img 
+                        src={image} 
+                        alt={`${idea.title} - Imatge ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                   ))}
                 </div>
