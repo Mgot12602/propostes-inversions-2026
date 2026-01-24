@@ -1,19 +1,59 @@
+'use client';
+
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Check, X, ArrowLeft } from 'lucide-react';
 import Navbar from '@/components/Navbar';
-import { investmentData } from '@/data/investments';
+import { InvestmentCategory, InvestmentIdea } from '@/types/investment';
 
-export default async function IdeaPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const allIdeas = investmentData.flatMap((category) => category.ideas);
-  const idea = allIdeas.find((i) => i.id === id);
+export default function IdeaPage({ params }: { params: Promise<{ id: string }> }) {
+  const [idea, setIdea] = useState<InvestmentIdea | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [id, setId] = useState<string>('');
+
+  useEffect(() => {
+    params.then(p => setId(p.id));
+  }, [params]);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const loadIdea = async () => {
+      try {
+        const response = await fetch('/api/investments');
+        const data: InvestmentCategory[] = await response.json();
+        const allIdeas = data.flatMap((category) => category.ideas);
+        const foundIdea = allIdeas.find((i) => i.id === id);
+        setIdea(foundIdea || null);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error loading idea:', error);
+        setLoading(false);
+      }
+    };
+
+    loadIdea();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <Navbar />
+        <div className="text-white text-xl">Carregant...</div>
+      </div>
+    );
+  }
 
   if (!idea) {
-    notFound();
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <Navbar />
+        <div className="text-white text-xl">Idea no trobada</div>
+      </div>
+    );
   }
 
   return (
