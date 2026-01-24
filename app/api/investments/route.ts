@@ -1,18 +1,41 @@
 import { NextResponse } from 'next/server';
-import { getStore } from '@netlify/blobs';
 import { InvestmentCategory } from '@/types/investment';
 import { investmentData as initialData } from '@/data/investments';
+import fs from 'fs';
+import path from 'path';
+
+const isProduction = process.env.NETLIFY === 'true';
+const dataFilePath = path.join(process.cwd(), 'data', 'investments.json');
+
+async function getDataFromBlobs() {
+  const { getStore } = await import('@netlify/blobs');
+  const store = getStore('investments');
+  const data = await store.get('data', { type: 'json' });
+  
+  if (!data) {
+    await store.setJSON('data', initialData);
+    return initialData;
+  }
+  
+  return data;
+}
+
+function getDataFromFile() {
+  try {
+    if (fs.existsSync(dataFilePath)) {
+      const fileContents = fs.readFileSync(dataFilePath, 'utf8');
+      return JSON.parse(fileContents);
+    }
+    return initialData;
+  } catch (error) {
+    console.error('Error reading file:', error);
+    return initialData;
+  }
+}
 
 export async function GET() {
   try {
-    const store = getStore('investments');
-    const data = await store.get('data', { type: 'json' });
-    
-    if (!data) {
-      await store.setJSON('data', initialData);
-      return NextResponse.json(initialData);
-    }
-    
+    const data = isProduction ? await getDataFromBlobs() : getDataFromFile();
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error reading investments:', error);
@@ -20,13 +43,24 @@ export async function GET() {
   }
 }
 
+async function saveDataToBlobs(data: InvestmentCategory[]) {
+  const { getStore } = await import('@netlify/blobs');
+  const store = getStore('investments');
+  await store.setJSON('data', data);
+}
+
+function saveDataToFile(data: InvestmentCategory[]) {
+  fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2), 'utf8');
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { categoryId, ideaId, updatedIdea } = body;
 
-    const store = getStore('investments');
-    const data: InvestmentCategory[] = await store.get('data', { type: 'json' }) || initialData;
+    const data: InvestmentCategory[] = isProduction 
+      ? await getDataFromBlobs() 
+      : getDataFromFile();
 
     const categoryIndex = data.findIndex(cat => cat.id === categoryId);
     if (categoryIndex === -1) {
@@ -43,7 +77,11 @@ export async function POST(request: Request) {
       ...updatedIdea,
     };
 
-    await store.setJSON('data', data);
+    if (isProduction) {
+      await saveDataToBlobs(data);
+    } else {
+      saveDataToFile(data);
+    }
 
     return NextResponse.json({ success: true, data });
   } catch (error) {
