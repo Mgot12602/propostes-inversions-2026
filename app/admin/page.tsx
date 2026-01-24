@@ -23,10 +23,21 @@ import { ArrowLeft, Edit, Upload, Trash2 } from 'lucide-react';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [password, setPassword] = useState('');
   const [editingIdea, setEditingIdea] = useState<InvestmentIdea | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    fetch('/api/auth/check')
+      .then(res => res.json())
+      .then(data => {
+        setIsAuthenticated(data.isAuthenticated);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   const handleEditClick = (idea: InvestmentIdea) => {
     setEditingIdea(idea);
@@ -98,14 +109,44 @@ export default function AdminPage() {
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'admin2026') {
-      setIsAuthenticated(true);
-    } else {
-      alert('Contrasenya incorrecta');
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+
+      if (response.ok) {
+        setIsAuthenticated(true);
+        toast.success('Autenticació correcta!');
+      } else {
+        toast.error('Contrasenya incorrecta');
+      }
+    } catch (error) {
+      toast.error('Error d\'autenticació');
     }
   };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setIsAuthenticated(false);
+      toast.success('Sessió tancada');
+    } catch (error) {
+      toast.error('Error al tancar sessió');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
+        <Navbar />
+        <div className="text-white text-xl">Carregant...</div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return (
@@ -156,12 +197,17 @@ export default function AdminPage() {
               <h1 className="text-5xl font-bold text-white mb-3">Panell d&apos;Administració</h1>
               <p className="text-slate-300 text-lg">Gestiona el contingut de les idees d&apos;inversió</p>
             </div>
-            <Link href="/">
-              <Button variant="outline" className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Tornar
+            <div className="flex gap-3">
+              <Button onClick={handleLogout} variant="outline" className="bg-red-600 text-white border-red-500 hover:bg-red-700">
+                Tancar sessió
               </Button>
-            </Link>
+              <Link href="/">
+                <Button variant="outline" className="bg-slate-700 text-white border-slate-600 hover:bg-slate-600">
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Tornar
+                </Button>
+              </Link>
+            </div>
           </div>
 
           <div className="grid gap-6">

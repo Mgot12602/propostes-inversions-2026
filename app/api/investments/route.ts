@@ -1,18 +1,22 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { getStore } from '@netlify/blobs';
 import { InvestmentCategory } from '@/types/investment';
-
-const dataFilePath = path.join(process.cwd(), 'data', 'investments.json');
+import { investmentData as initialData } from '@/data/investments';
 
 export async function GET() {
   try {
-    const fileContents = fs.readFileSync(dataFilePath, 'utf8');
-    const data = JSON.parse(fileContents);
+    const store = getStore('investments');
+    const data = await store.get('data', { type: 'json' });
+    
+    if (!data) {
+      await store.setJSON('data', initialData);
+      return NextResponse.json(initialData);
+    }
+    
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error reading investments:', error);
-    return NextResponse.json({ error: 'Failed to read investments' }, { status: 500 });
+    return NextResponse.json(initialData);
   }
 }
 
@@ -21,8 +25,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { categoryId, ideaId, updatedIdea } = body;
 
-    const fileContents = fs.readFileSync(dataFilePath, 'utf8');
-    const data: InvestmentCategory[] = JSON.parse(fileContents);
+    const store = getStore('investments');
+    const data: InvestmentCategory[] = await store.get('data', { type: 'json' }) || initialData;
 
     const categoryIndex = data.findIndex(cat => cat.id === categoryId);
     if (categoryIndex === -1) {
@@ -39,7 +43,7 @@ export async function POST(request: Request) {
       ...updatedIdea,
     };
 
-    fs.writeFileSync(dataFilePath, JSON.stringify(data, null, 2), 'utf8');
+    await store.setJSON('data', data);
 
     return NextResponse.json({ success: true, data });
   } catch (error) {

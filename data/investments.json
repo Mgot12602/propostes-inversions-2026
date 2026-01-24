@@ -8,7 +8,7 @@
         "title": "Hotel Pousada Sol e Lua",
         "category": "propietats",
         "description": "Oportunitat única d'adquirir un hotel boutique a la costa brasilera amb gran potencial turístic. Ubicació privilegiada amb vistes al mar i accés directe a la platja.",
-        "investment": "€850.000",
+        "investment": "€320.000",
         "annualReturn": "12-15%",
         "pros": [
           "Ubicació privilegiada amb vistes al mar",
@@ -23,14 +23,16 @@
           "Inversió inicial elevada",
           "Risc de canvi de divisa"
         ],
-        "images": ["/placeholder-hotel.jpg"]
+        "images": [
+          "/placeholder-hotel.jpg"
+        ]
       },
       {
         "id": "casa-pousada",
         "title": "Casa costat Pousada",
         "category": "propietats",
         "description": "Propietat residencial adjacent a la Pousada, ideal per a ampliació del negoci hoteler o com a residència privada de luxe.",
-        "investment": "€320.000",
+        "investment": "€67.000",
         "annualReturn": "8-10%",
         "pros": [
           "Proximitat a negoci hoteler existent",
@@ -43,7 +45,9 @@
           "Menor rendibilitat que l'hotel",
           "Dependència del mercat local"
         ],
-        "images": ["/placeholder-house.jpg"]
+        "images": [
+          "/placeholder-house.jpg"
+        ]
       },
       {
         "id": "terreny-mar",
@@ -65,7 +69,9 @@
           "No genera ingressos immediats",
           "Risc regulatori"
         ],
-        "images": ["/placeholder-land.jpg"]
+        "images": [
+          "/placeholder-land.jpg"
+        ]
       },
       {
         "id": "pis-fortaleza",
@@ -87,7 +93,9 @@
           "Fluctuació d'ocupació",
           "Regulacions canviants per lloguers turístics"
         ],
-        "images": ["/placeholder-apartment.jpg"]
+        "images": [
+          "/placeholder-apartment.jpg"
+        ]
       }
     ]
   },
@@ -116,7 +124,9 @@
           "No protegeix contra caigudes del mercat",
           "Concentració en mercats desenvolupats"
         ],
-        "images": ["/placeholder-etf.jpg"]
+        "images": [
+          "/placeholder-etf.jpg"
+        ]
       },
       {
         "id": "bonos-aaa",
@@ -138,7 +148,9 @@
           "Sensibilitat als tipus d'interès",
           "Oportunitat de cost respecte altres inversions"
         ],
-        "images": ["/placeholder-bonds.jpg"]
+        "images": [
+          "/placeholder-bonds.jpg"
+        ]
       }
     ]
   },
@@ -169,7 +181,9 @@
           "Risc tecnològic",
           "Temps de retorn més llarg"
         ],
-        "images": ["/placeholder-recycling.jpg"]
+        "images": [
+          "/placeholder-recycling.jpg"
+        ]
       }
     ]
   }
