@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { investmentData } from '@/data/investments';
-import { InvestmentIdea } from '@/types/investment';
+import { InvestmentCategory, InvestmentIdea } from '@/types/investment';
 import { toast } from 'sonner';
 import Navbar from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
@@ -24,19 +23,41 @@ import { ArrowLeft, Edit, Upload, Trash2 } from 'lucide-react';
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
+  const [investmentData, setInvestmentData] = useState<InvestmentCategory[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editingIdea, setEditingIdea] = useState<InvestmentIdea | null>(null);
+  const [editingCategory, setEditingCategory] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const auth = localStorage.getItem('admin_authenticated');
     if (auth === 'true') {
       setIsAuthenticated(true);
     }
   }, []);
 
-  const handleEditClick = (idea: InvestmentIdea) => {
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadData();
+    }
+  }, [isAuthenticated]);
+
+  const loadData = async () => {
+    try {
+      const response = await fetch('/api/investments');
+      const data = await response.json();
+      setInvestmentData(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading data:', error);
+      setLoading(false);
+    }
+  };
+
+  const handleEditClick = (idea: InvestmentIdea, categoryId: string) => {
     setEditingIdea(idea);
+    setEditingCategory(categoryId);
     setIsDialogOpen(true);
   };
 
@@ -60,7 +81,7 @@ export default function AdminPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          categoryId: editingIdea.category,
+          categoryId: editingCategory,
           ideaId: editingIdea.id,
           updatedIdea: {
             title,
@@ -77,14 +98,11 @@ export default function AdminPage() {
         throw new Error('Failed to save changes');
       }
 
+      await loadData();
       setIsDialogOpen(false);
       toast.success('Canvis desats correctament!', {
         description: 'Les dades s\'han actualitzat permanentment.',
       });
-
-      setTimeout(() => {
-        window.location.reload();
-      }, 1000);
     } catch (error) {
       toast.error('Error al desar els canvis', {
         description: 'Si us plau, torna-ho a intentar.',
@@ -96,13 +114,39 @@ export default function AdminPage() {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      toast.success(`${files.length} fitxer(s) seleccionat(s)`, {
-        description: Array.from(files).map(f => f.name).join(', '),
-      });
-    }
+    if (!files || files.length === 0 || !editingIdea) return;
+
+    const file = files[0];
+    const reader = new FileReader();
+
+    reader.onloadend = async () => {
+      const base64String = reader.result as string;
+      
+      try {
+        const response = await fetch('/api/investments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            categoryId: editingCategory,
+            ideaId: editingIdea.id,
+            updatedIdea: {
+              image: base64String,
+            },
+          }),
+        });
+
+        if (!response.ok) throw new Error('Failed to upload image');
+
+        await loadData();
+        toast.success('Imatge pujada correctament!');
+      } catch (error) {
+        toast.error('Error al pujar la imatge');
+      }
+    };
+
+    reader.readAsDataURL(file);
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -213,7 +257,7 @@ export default function AdminPage() {
                               variant="outline" 
                               size="sm" 
                               className="bg-blue-600 text-white border-blue-500 hover:bg-blue-700"
-                              onClick={() => handleEditClick(idea)}
+                              onClick={() => handleEditClick(idea, category.id)}
                             >
                               <Edit className="h-4 w-4 mr-1" />
                               Editar
