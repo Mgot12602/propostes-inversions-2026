@@ -114,6 +114,34 @@ export default function AdminPage() {
     fileInputRef.current?.click();
   };
 
+  const handleDeleteImage = async (imageIndex: number) => {
+    if (!editingIdea) return;
+
+    try {
+      const currentImages = editingIdea.images || [];
+      const updatedImages = currentImages.filter((_, idx) => idx !== imageIndex);
+
+      const response = await fetch('/api/investments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          categoryId: editingCategory,
+          ideaId: editingIdea.id,
+          updatedIdea: {
+            images: updatedImages,
+          },
+        }),
+      });
+
+      if (!response.ok) throw new Error('Failed to delete image');
+
+      await loadData();
+      toast.success('Imatge eliminada correctament!');
+    } catch (error) {
+      toast.error('Error al eliminar la imatge');
+    }
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0 || !editingIdea) return;
@@ -313,7 +341,11 @@ export default function AdminPage() {
                                         alt={`Imatge ${idx + 1}`}
                                         className="w-full h-full object-cover"
                                       />
-                                      <button type="button" className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <button 
+                                        type="button" 
+                                        onClick={() => handleDeleteImage(idx)}
+                                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                                      >
                                         <Trash2 className="h-3 w-3" />
                                       </button>
                                     </div>
@@ -329,13 +361,14 @@ export default function AdminPage() {
                                     ref={fileInputRef}
                                     type="file"
                                     accept="image/*,video/*"
-                                    multiple
                                     className="hidden"
                                     onChange={handleFileChange}
                                   />
                                 </div>
                                 <p className="text-xs text-slate-500 mt-2">
-                                  Clica per pujar noves imatges o vídeos
+                                  {idea.images && idea.images.length > 0 
+                                    ? `${idea.images.length} imatge(s). Clica + per afegir més o X per eliminar.`
+                                    : 'Clica per pujar imatges o vídeos'}
                                 </p>
                               </div>
                               <Button type="submit" className="w-full">Desar canvis</Button>
