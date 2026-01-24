@@ -23,20 +23,16 @@ import { ArrowLeft, Edit, Upload, Trash2 } from 'lucide-react';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [password, setPassword] = useState('');
   const [editingIdea, setEditingIdea] = useState<InvestmentIdea | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
-    fetch('/api/auth/check')
-      .then(res => res.json())
-      .then(data => {
-        setIsAuthenticated(data.isAuthenticated);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
+    const auth = localStorage.getItem('admin_authenticated');
+    if (auth === 'true') {
+      setIsAuthenticated(true);
+    }
   }, []);
 
   const handleEditClick = (idea: InvestmentIdea) => {
@@ -109,44 +105,22 @@ export default function AdminPage() {
     }
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      });
-
-      if (response.ok) {
-        setIsAuthenticated(true);
-        toast.success('Autenticació correcta!');
-      } else {
-        toast.error('Contrasenya incorrecta');
-      }
-    } catch (error) {
-      toast.error('Error d\'autenticació');
+    if (password === 'admin2026') {
+      localStorage.setItem('admin_authenticated', 'true');
+      setIsAuthenticated(true);
+      toast.success('Autenticació correcta!');
+    } else {
+      toast.error('Contrasenya incorrecta');
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      setIsAuthenticated(false);
-      toast.success('Sessió tancada');
-    } catch (error) {
-      toast.error('Error al tancar sessió');
-    }
+  const handleLogout = () => {
+    localStorage.removeItem('admin_authenticated');
+    setIsAuthenticated(false);
+    toast.success('Sessió tancada');
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center">
-        <Navbar />
-        <div className="text-white text-xl">Carregant...</div>
-      </div>
-    );
-  }
 
   if (!isAuthenticated) {
     return (
