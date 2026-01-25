@@ -12,8 +12,8 @@ const PousadaSoleLuaCAGR = () => {
   const impuestoVentaBrasil = 0.15;
   const inversionTotalEuros = precioCompraEuros * (1 + impuestosCompraBrasil);
   
-  const habitaciones = 10;
-  const diariaPorHabitacion = 150;
+  const habitaciones = 15;
+  const diariaPorHabitacion = 50;
   const ocupacionAnual = 0.55;
   
   const ingresosBrutosAnuales = habitaciones * diariaPorHabitacion * 365 * ocupacionAnual;
@@ -43,28 +43,39 @@ const PousadaSoleLuaCAGR = () => {
     return cagrInmueble;
   };
   
-  const calcularRentabilidadNegocioBruta = () => {
-    return (ingresosBrutosAnuales / precioCompraEuros) * 100;
+  const crecimientoNegocioAnual = 0.05;
+  
+  const calcularRentabilidadNegocioBruta = (años: number) => {
+    const ingresosConCrecimiento = ingresosBrutosAnuales * Math.pow(1 + crecimientoNegocioAnual, años - 1);
+    return (ingresosConCrecimiento / precioCompraEuros) * 100;
   };
   
-  const calcularRentabilidadNegocioNeta = () => {
-    const impuestoSimples = ingresosBrutosAnuales * simplesNacional;
-    const costos = ingresosBrutosAnuales * costosOperativos;
+  const calcularRentabilidadNegocioNeta = (años: number) => {
+    let valorAcumulado = precioCompraEuros;
     
-    const beneficioBruto = ingresosBrutosAnuales - impuestoSimples - costos - gastosMantenimiento - gestoriaAnual;
+    for (let i = 1; i <= años; i++) {
+      const ingresosAno = ingresosBrutosAnuales * Math.pow(1 + crecimientoNegocioAnual, i - 1);
+      const impuestoSimples = ingresosAno * simplesNacional;
+      const costos = ingresosAno * costosOperativos;
+      
+      const beneficioBruto = ingresosAno - impuestoSimples - costos - gastosMantenimiento - gestoriaAnual;
+      
+      const retencionBrasil = beneficioBruto > 0 ? beneficioBruto * retencionRepatriacion : 0;
+      const beneficioTrasRetencion = beneficioBruto - retencionBrasil;
+      
+      const impuestoEspana = beneficioTrasRetencion > 0 ? beneficioTrasRetencion * impuestoSociedadesEspana : 0;
+      const beneficioNeto = beneficioTrasRetencion - impuestoEspana;
+      
+      valorAcumulado += beneficioNeto;
+    }
     
-    const retencionBrasil = beneficioBruto > 0 ? beneficioBruto * retencionRepatriacion : 0;
-    const beneficioTrasRetencion = beneficioBruto - retencionBrasil;
-    
-    const impuestoEspana = beneficioTrasRetencion > 0 ? beneficioTrasRetencion * impuestoSociedadesEspana : 0;
-    const beneficioNeto = beneficioTrasRetencion - impuestoEspana;
-    
-    return (beneficioNeto / precioCompraEuros) * 100;
+    const cagrNegocio = (Math.pow(valorAcumulado / precioCompraEuros, 1 / años) - 1) * 100;
+    return cagrNegocio;
   };
   
   const calcularRentabilidadCombinada = (años: number) => {
     const rentInmueble = calcularRentabilidadInmuebleNeta(años);
-    const rentNegocio = calcularRentabilidadNegocioNeta();
+    const rentNegocio = calcularRentabilidadNegocioNeta(años);
     
     return rentInmueble + rentNegocio;
   };
@@ -77,8 +88,8 @@ const PousadaSoleLuaCAGR = () => {
       año: año,
       inmuebleBruta: calcularRentabilidadInmuebleBruta(),
       inmuebleNeta: calcularRentabilidadInmuebleNeta(año),
-      negocioBruta: calcularRentabilidadNegocioBruta(),
-      negocioNeta: calcularRentabilidadNegocioNeta(),
+      negocioBruta: calcularRentabilidadNegocioBruta(año),
+      negocioNeta: calcularRentabilidadNegocioNeta(año),
       combinadaNeta: calcularRentabilidadCombinada(año),
       inflacion: inflacionEspana50Anos
     });
@@ -95,6 +106,7 @@ const PousadaSoleLuaCAGR = () => {
           <p><strong>Inversió total (amb impostos compra 4%):</strong> {Math.round(inversionTotalEuros).toLocaleString()}€</p>
           <p><strong>Pousada operativa:</strong> {habitaciones} habitacions</p>
           <p><strong>Ingressos estimats:</strong> {Math.round(ingresosBrutosAnuales).toLocaleString()}€/any ({habitaciones} hab × {diariaPorHabitacion}€/nit × {ocupacionAnual * 100}% ocupació)</p>
+          <p><strong>Creciment negoci:</strong> 5% anual compost sobre ingressos acumulats</p>
           <p><strong>Impostos Brasil:</strong> Simples Nacional 11% | Venda 15%</p>
           <p><strong>Impostos Espanya:</strong> Retenció 15% | Societats 25%</p>
         </div>
@@ -199,8 +211,8 @@ const PousadaSoleLuaCAGR = () => {
         <ul className="text-sm text-slate-300 space-y-2">
           <li>• <strong>Immoble BRUT (blau clar):</strong> Revalorització {revalorizacion}% anual sense impostos</li>
           <li>• <strong>Immoble NET (blau):</strong> Revalorització després d&apos;impostos compra (4%) i venda (15%)</li>
-          <li>• <strong>Negoci BRUT (taronja clar):</strong> Ingressos bruts / inversió = {calcularRentabilidadNegocioBruta().toFixed(1)}% anual</li>
-          <li>• <strong>Negoci NET (taronja):</strong> Benefici net després de Simples Nacional (11%), costos operatius (40%), manteniment, gestoria, retenció Brasil (15%) i impostos Espanya (25%) = {calcularRentabilidadNegocioNeta().toFixed(1)}% anual</li>
+          <li>• <strong>Negoci BRUT (taronja clar):</strong> Ingressos bruts / inversió amb creixement 5% anual compost</li>
+          <li>• <strong>Negoci NET (taronja):</strong> Benefici net després de Simples Nacional (11%), costos operatius (40%), manteniment, gestoria, retenció Brasil (15%) i impostos Espanya (25%) amb creixement compost</li>
           <li>• <strong>TOTAL NET (verd):</strong> Suma de rendiment immoble + rendiment negoci = rendiment total real</li>
           <li>• El rendiment del negoci és constant (línia horitzontal) mentre que el de l&apos;immoble millora amb els anys per dilució dels costos inicials</li>
         </ul>
@@ -211,11 +223,11 @@ const PousadaSoleLuaCAGR = () => {
         <div className="grid grid-cols-2 gap-4 text-sm text-slate-300">
           <div>
             <p><strong>Rendiment immoble net (any 10):</strong> {calcularRentabilidadInmuebleNeta(10).toFixed(2)}%</p>
-            <p><strong>Rendiment negoci net:</strong> {calcularRentabilidadNegocioNeta().toFixed(2)}%</p>
+            <p><strong>Rendiment negoci net (any 10):</strong> {calcularRentabilidadNegocioNeta(10).toFixed(2)}%</p>
           </div>
           <div>
             <p><strong>Rendiment total net (any 10):</strong> {calcularRentabilidadCombinada(10).toFixed(2)}%</p>
-            <p><strong>Benefici net anual:</strong> ~{Math.round((calcularRentabilidadNegocioNeta() / 100) * precioCompraEuros).toLocaleString()}€</p>
+            <p><strong>Benefici net anual (any 10):</strong> ~{Math.round((calcularRentabilidadNegocioNeta(10) / 100) * precioCompraEuros).toLocaleString()}€</p>
           </div>
         </div>
       </div>
