@@ -21,30 +21,17 @@ const FinancialProductsCAGR = ({ productType }: FinancialProductsCAGRProps) => {
     return rentabilidadAnual;
   };
   
-  const calcularRentabilidadNeta = (años: number) => {
-    const rentabilidadDecimal = rentabilidadAnual / 100;
+  const calcularRentabilidadNeta = () => {
+    const rentabilidadBrutaDecimal = rentabilidadAnual / 100;
+    const comisionDecimal = comisionCustodia;
     
-    let valorCartera = inversionInicial;
-    let costesTotalesCustodia = 0;
+    const rentabilidadDespuesComision = rentabilidadBrutaDecimal - comisionDecimal;
     
-    for (let i = 1; i <= años; i++) {
-      const gananciaAnual = valorCartera * rentabilidadDecimal;
-      valorCartera += gananciaAnual;
-      
-      const costeCustodiaAnual = valorCartera * comisionCustodia;
-      costesTotalesCustodia += costeCustodiaAnual;
-      valorCartera -= costeCustodiaAnual;
-    }
+    const factorImpuesto = 1 - impuestoBeneficios;
     
-    const gananciaTotal = valorCartera - inversionInicial;
+    const rentabilidadNetaAproximada = rentabilidadDespuesComision * factorImpuesto;
     
-    const impuestos = gananciaTotal > 0 ? gananciaTotal * impuestoBeneficios : 0;
-    
-    const valorFinalNeto = valorCartera - impuestos;
-    
-    const cagrNeto = (Math.pow(valorFinalNeto / inversionInicial, 1 / años) - 1) * 100;
-    
-    return cagrNeto;
+    return rentabilidadNetaAproximada * 100;
   };
   
   const data = [];
@@ -52,7 +39,7 @@ const FinancialProductsCAGR = ({ productType }: FinancialProductsCAGRProps) => {
     data.push({
       año: año,
       bruta: calcularRentabilidadBruta(),
-      neta: calcularRentabilidadNeta(año)
+      neta: calcularRentabilidadNeta()
     });
   }
   
@@ -151,13 +138,13 @@ const FinancialProductsCAGR = ({ productType }: FinancialProductsCAGRProps) => {
         <ul className="text-sm text-slate-300 space-y-2">
           <li>• <strong>Línia puntejada (BRUTA):</strong> Rentabilitat nominal de {rentabilidadAnual}% anual sense considerar impostos ni comissions</li>
           <li>• <strong>Línia sòlida (NETA):</strong> Rentabilitat real després de comissions de custòdia (0.15% anual) i impostos sobre beneficis (21%)</li>
-          <li>• <strong>La diferència</strong> entre bruta i neta mostra l&apos;impacte de les comissions i impostos</li>
-          <li>• Amb {rentabilidadAnual}% brut, la rentabilitat neta a llarg termini és ~{calcularRentabilidadNeta(25).toFixed(2)}% CAGR</li>
+          <li>• <strong>CAGR Net constant:</strong> {calcularRentabilidadNeta().toFixed(2)}% anual (independent dels anys d&apos;inversió)</li>
+          <li>• <strong>Càlcul:</strong> ({rentabilidadAnual}% - 0.15%) × (1 - 21%) = {calcularRentabilidadNeta().toFixed(2)}%</li>
           <li>• {isETF 
             ? 'Els ETFs tenen avantatges fiscals: no tributen fins a la venda i permeten diferir impostos'
             : 'Els bons tenen fiscalitat similar però menor volatilitat i rendiments més predictibles'
           }</li>
-          <li>• La comissió de custòdia (0.15%) és baixa però s&apos;aplica sobre el valor total de la cartera cada any</li>
+          <li>• La comissió de custòdia (0.15%) s&apos;aplica anualment, reduint la rentabilitat de forma constant</li>
         </ul>
       </div>
     </div>
