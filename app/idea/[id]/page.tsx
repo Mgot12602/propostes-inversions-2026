@@ -107,12 +107,12 @@ export default function IdeaPage({ params }: { params: Promise<{ id: string }> }
                 <p className="text-xl text-slate-300 leading-relaxed">{idea.description}</p>
               </section>
 
-              {idea.id === 'inversio-catalunya' && (
-                <section className="mb-12">
-                  <h2 className="text-3xl font-bold text-white mb-6">Anàlisi de Rentabilitat</h2>
+              <section className="mb-12">
+                <h2 className="text-3xl font-bold text-white mb-6">Anàlisi de Rentabilitat</h2>
+                <div className="bg-slate-800 p-4 rounded-lg">
                   <RealEstateCAGR />
-                </section>
-              )}
+                </div>
+              </section>
 
               <section className="mb-12">
                 <h2 className="text-3xl font-bold text-white mb-8">Anàlisi</h2>
