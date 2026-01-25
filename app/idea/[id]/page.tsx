@@ -9,6 +9,7 @@ import { Check, X, ArrowLeft } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { InvestmentCategory, InvestmentIdea } from '@/types/investment';
 import RealEstateCAGR from '@/components/RealEstateCAGR';
+import FinancialProductsCAGR from '@/components/FinancialProductsCAGR';
 
 export default function IdeaPage({ params }: { params: Promise<{ id: string }> }) {
   const [idea, setIdea] = useState<InvestmentIdea | null>(null);
@@ -107,12 +108,26 @@ export default function IdeaPage({ params }: { params: Promise<{ id: string }> }
                 <p className="text-xl text-slate-300 leading-relaxed">{idea.description}</p>
               </section>
 
-              <section className="mb-12">
-                <h2 className="text-3xl font-bold text-white mb-6">Anàlisi de Rentabilitat</h2>
-                <div className="bg-slate-800 p-4 rounded-lg">
+              {idea.id === 'inversio-catalunya' && (
+                <section className="mb-12">
+                  <h2 className="text-3xl font-bold text-white mb-6">Anàlisi de Rentabilitat</h2>
                   <RealEstateCAGR />
-                </div>
-              </section>
+                </section>
+              )}
+
+              {idea.id === 'etf-msci-world' && (
+                <section className="mb-12">
+                  <h2 className="text-3xl font-bold text-white mb-6">Anàlisi de Rentabilitat</h2>
+                  <FinancialProductsCAGR productType="etf" />
+                </section>
+              )}
+
+              {idea.id === 'bonos-aaa' && (
+                <section className="mb-12">
+                  <h2 className="text-3xl font-bold text-white mb-6">Anàlisi de Rentabilitat</h2>
+                  <FinancialProductsCAGR productType="bonds" />
+                </section>
+              )}
 
               <section className="mb-12">
                 <h2 className="text-3xl font-bold text-white mb-8">Anàlisi</h2>
