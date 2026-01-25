@@ -5,6 +5,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 
 const PousadaSoleLuaCAGR = () => {
   const [revalorizacion, setRevalorizacion] = useState(10);
+  const [ocupacionAnual, setOcupacionAnual] = useState(55);
+  const [diariaPorHabitacion, setDiariaPorHabitacion] = useState(65);
   
   const precioCompraEuros = 340000;
   
@@ -13,10 +15,9 @@ const PousadaSoleLuaCAGR = () => {
   const inversionTotalEuros = precioCompraEuros * (1 + impuestosCompraBrasil);
   
   const habitaciones = 15;
-  const diariaPorHabitacion = 50;
-  const ocupacionAnual = 0.55;
+  const ocupacionDecimal = ocupacionAnual / 100;
   
-  const ingresosBrutosAnuales = habitaciones * diariaPorHabitacion * 365 * ocupacionAnual;
+  const ingresosBrutosAnuales = habitaciones * diariaPorHabitacion * 365 * ocupacionDecimal;
   
   const simplesNacional = 0.11;
   const costosOperativos = 0.40;
@@ -94,28 +95,73 @@ const PousadaSoleLuaCAGR = () => {
           <p><strong>Preu compra:</strong> {precioCompraEuros.toLocaleString()}€</p>
           <p><strong>Inversió total (amb impostos compra 4%):</strong> {Math.round(inversionTotalEuros).toLocaleString()}€</p>
           <p><strong>Pousada operativa:</strong> {habitaciones} habitacions</p>
-          <p><strong>Ingressos estimats:</strong> {Math.round(ingresosBrutosAnuales).toLocaleString()}€/any ({habitaciones} hab × {diariaPorHabitacion}€/nit × {ocupacionAnual * 100}% ocupació)</p>
+          <p><strong>Ingressos estimats:</strong> {Math.round(ingresosBrutosAnuales).toLocaleString()}€/any ({habitaciones} hab × {diariaPorHabitacion}€/nit × {ocupacionAnual}% ocupació)</p>
           <p><strong>Impostos Brasil:</strong> Simples Nacional 11% | Venda 15%</p>
           <p><strong>Impostos Espanya:</strong> Retenció 15% | Societats 25%</p>
+          <p><strong>Despeses operatives (40%):</strong> Personal, subministres, comissions OTA, màrqueting, assegurances</p>
         </div>
         
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-slate-200 mb-2">
-            Revalorització anual immoble Paracuru: {revalorizacion}%
-          </label>
-          <div className="flex items-center gap-4">
-            <input
-              type="range"
-              min="5"
-              max="18"
-              step="0.5"
-              value={revalorizacion}
-              onChange={(e) => setRevalorizacion(parseFloat(e.target.value))}
-              className="w-64"
-            />
-            <div className="text-sm text-slate-300">
-              <button onClick={() => setRevalorizacion(8)} className="px-3 py-1 bg-blue-600 rounded mr-2 hover:bg-blue-700">8% (conservador)</button>
-              <button onClick={() => setRevalorizacion(12)} className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-700">12% (històric)</button>
+        <div className="space-y-4">
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-slate-200 mb-2">
+              Revalorització anual immoble Paracuru: {revalorizacion}%
+            </label>
+            <div className="flex items-center gap-4">
+              <input
+                type="range"
+                min="5"
+                max="18"
+                step="0.5"
+                value={revalorizacion}
+                onChange={(e) => setRevalorizacion(parseFloat(e.target.value))}
+                className="w-64"
+              />
+              <div className="text-sm text-slate-300">
+                <button onClick={() => setRevalorizacion(8)} className="px-3 py-1 bg-blue-600 rounded mr-2 hover:bg-blue-700">8% (conservador)</button>
+                <button onClick={() => setRevalorizacion(12)} className="px-3 py-1 bg-blue-600 rounded hover:bg-blue-700">12% (històric)</button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-slate-200 mb-2">
+              Ocupació anual: {ocupacionAnual}% (mitjana Paracuru: 45-65%)
+            </label>
+            <div className="flex items-center gap-4">
+              <input
+                type="range"
+                min="30"
+                max="85"
+                step="5"
+                value={ocupacionAnual}
+                onChange={(e) => setOcupacionAnual(parseFloat(e.target.value))}
+                className="w-64"
+              />
+              <div className="text-sm text-slate-300">
+                <button onClick={() => setOcupacionAnual(45)} className="px-3 py-1 bg-orange-600 rounded mr-2 hover:bg-orange-700">45% (baixa)</button>
+                <button onClick={() => setOcupacionAnual(65)} className="px-3 py-1 bg-orange-600 rounded hover:bg-orange-700">65% (alta)</button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-slate-200 mb-2">
+              Tarifa per habitació (amb esmorzar): {diariaPorHabitacion}€/nit
+            </label>
+            <div className="flex items-center gap-4">
+              <input
+                type="range"
+                min="40"
+                max="100"
+                step="5"
+                value={diariaPorHabitacion}
+                onChange={(e) => setDiariaPorHabitacion(parseFloat(e.target.value))}
+                className="w-64"
+              />
+              <div className="text-sm text-slate-300">
+                <button onClick={() => setDiariaPorHabitacion(50)} className="px-3 py-1 bg-green-600 rounded mr-2 hover:bg-green-700">50€ (baixa)</button>
+                <button onClick={() => setDiariaPorHabitacion(80)} className="px-3 py-1 bg-green-600 rounded hover:bg-green-700">80€ (alta)</button>
+              </div>
             </div>
           </div>
         </div>
@@ -216,6 +262,38 @@ const PousadaSoleLuaCAGR = () => {
           <div>
             <p><strong>Rendiment total net (any 10):</strong> {calcularRentabilidadCombinada(10).toFixed(2)}%</p>
             <p><strong>Benefici net anual:</strong> ~{Math.round((calcularRentabilidadNegocioNeta() / 100) * precioCompraEuros).toLocaleString()}€</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 p-4 bg-orange-900/30 rounded-lg border border-orange-500/30">
+        <h3 className="font-semibold text-white mb-2">💰 Desglossament despeses operatives:</h3>
+        <div className="text-sm text-slate-300 space-y-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p><strong>Ingressos bruts:</strong> {Math.round(ingresosBrutosAnuales).toLocaleString()}€/any</p>
+              <p><strong>Impost Simples Nacional (11%):</strong> {Math.round(ingresosBrutosAnuales * 0.11).toLocaleString()}€</p>
+              <p><strong>Costos operatives (40%):</strong> {Math.round(ingresosBrutosAnuales * 0.40).toLocaleString()}€</p>
+              <p><strong>Manteniment:</strong> {gastosMantenimiento.toLocaleString()}€</p>
+              <p><strong>Gestoria internacional:</strong> {gestoriaAnual.toLocaleString()}€</p>
+            </div>
+            <div>
+              <p><strong>Subtotal despeses:</strong> {Math.round(ingresosBrutosAnuales * 0.11 + ingresosBrutosAnuales * 0.40 + gastosMantenimiento + gestoriaAnual).toLocaleString()}€</p>
+              <p><strong>Benefici/pèrdua abans impostos:</strong> {Math.round(ingresosBrutosAnuales - (ingresosBrutosAnuales * 0.11 + ingresosBrutosAnuales * 0.40 + gastosMantenimiento + gestoriaAnual)).toLocaleString()}€</p>
+              <p><strong>Retenció Brasil (15%):</strong> {Math.round(Math.max(0, ingresosBrutosAnuales - (ingresosBrutosAnuales * 0.11 + ingresosBrutosAnuales * 0.40 + gastosMantenimiento + gestoriaAnual)) * 0.15).toLocaleString()}€</p>
+              <p><strong>Benefici net final:</strong> {Math.round(Math.max(0, ingresosBrutosAnuales - (ingresosBrutosAnuales * 0.11 + ingresosBrutosAnuales * 0.40 + gastosMantenimiento + gestoriaAnual)) * 0.85 * 0.75).toLocaleString()}€</p>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-orange-500/30">
+            <p><strong>📋 Despeses operatives detallades (40% = {Math.round(ingresosBrutosAnuales * 0.40).toLocaleString()}€):</strong></p>
+            <ul className="ml-4 mt-1 space-y-1">
+              <li>• Personal (recepció, neteja, manteniment): ~{Math.round(ingresosBrutosAnuales * 0.15).toLocaleString()}€</li>
+              <li>• Subministres (electricitat, aigua, gas): ~{Math.round(ingresosBrutosAnuales * 0.08).toLocaleString()}€</li>
+              <li>• Comissions OTA (Booking, Airbnb): ~{Math.round(ingresosBrutosAnuales * 0.08).toLocaleString()}€</li>
+              <li>• Productes (esmorzars, neteja, roba): ~{Math.round(ingresosBrutosAnuales * 0.05).toLocaleString()}€</li>
+              <li>• Màrqueting i publicitat: ~{Math.round(ingresosBrutosAnuales * 0.02).toLocaleString()}€</li>
+              <li>• Assegurances i impostos locals: ~{Math.round(ingresosBrutosAnuales * 0.02).toLocaleString()}€</li>
+            </ul>
           </div>
         </div>
       </div>
