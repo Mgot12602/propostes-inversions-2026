@@ -34,12 +34,15 @@ const FinancialProductsCAGR = ({ productType }: FinancialProductsCAGRProps) => {
     return rentabilidadNetaAproximada * 100;
   };
   
+  const inflacionEspana50Anos = 4.8;
+  
   const data = [];
   for (let año = 1; año <= 25; año++) {
     data.push({
       año: año,
       bruta: calcularRentabilidadBruta(),
-      neta: calcularRentabilidadNeta()
+      neta: calcularRentabilidadNeta(),
+      inflacion: inflacionEspana50Anos
     });
   }
   
@@ -128,6 +131,15 @@ const FinancialProductsCAGR = ({ productType }: FinancialProductsCAGRProps) => {
             stroke="#3b82f6" 
             strokeWidth={3}
             name="NETA (real)"
+            dot={false}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="inflacion" 
+            stroke="#ef4444" 
+            strokeWidth={2}
+            strokeDasharray="3 3"
+            name="Inflació Espanya 50 anys (4,8%)"
             dot={false}
           />
         </LineChart>

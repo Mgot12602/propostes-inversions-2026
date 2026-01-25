@@ -58,6 +58,8 @@ const RealEstateCAGR = () => {
     return cagrNeto;
   };
   
+  const inflacionEspana50Anos = 4.8;
+  
   const data = [];
   for (let año = 1; año <= 25; año++) {
     data.push({
@@ -65,7 +67,8 @@ const RealEstateCAGR = () => {
       vaciaNeta: calcularRentabilidadNeta(false, año),
       alquiladaNeta: calcularRentabilidadNeta(true, año),
       vaciaBruta: calcularRentabilidadBruta(false),
-      alquiladaBruta: calcularRentabilidadBruta(true)
+      alquiladaBruta: calcularRentabilidadBruta(true),
+      inflacion: inflacionEspana50Anos
     });
   }
   
@@ -155,6 +158,15 @@ const RealEstateCAGR = () => {
             stroke="#f97316" 
             strokeWidth={3}
             name="Llogada NETA (real)"
+            dot={false}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="inflacion" 
+            stroke="#ef4444" 
+            strokeWidth={2}
+            strokeDasharray="3 3"
+            name="Inflació Espanya 50 anys (4,8%)"
             dot={false}
           />
         </LineChart>

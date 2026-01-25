@@ -69,6 +69,8 @@ const PousadaSoleLuaCAGR = () => {
     return rentInmueble + rentNegocio;
   };
   
+  const inflacionEspana50Anos = 4.8;
+  
   const data = [];
   for (let año = 1; año <= 25; año++) {
     data.push({
@@ -77,7 +79,8 @@ const PousadaSoleLuaCAGR = () => {
       inmuebleNeta: calcularRentabilidadInmuebleNeta(año),
       negocioBruta: calcularRentabilidadNegocioBruta(),
       negocioNeta: calcularRentabilidadNegocioNeta(),
-      combinadaNeta: calcularRentabilidadCombinada(año)
+      combinadaNeta: calcularRentabilidadCombinada(año),
+      inflacion: inflacionEspana50Anos
     });
   }
   
@@ -177,6 +180,15 @@ const PousadaSoleLuaCAGR = () => {
             stroke="#22c55e" 
             strokeWidth={3}
             name="TOTAL NET (Immoble + Negoci)"
+            dot={false}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="inflacion" 
+            stroke="#ef4444" 
+            strokeWidth={2}
+            strokeDasharray="3 3"
+            name="Inflació Espanya 50 anys (4,8%)"
             dot={false}
           />
         </LineChart>
