@@ -70,24 +70,27 @@ export const investmentData: InvestmentCategory[] = [
         images: ['/placeholder-land.jpg']
       },
       {
-        id: 'pis-fortaleza',
-        title: 'Pis a Fortaleza - Gratacels Airbnb',
+        id: 'inversio-catalunya',
+        title: 'Inversió Immobiliària a Catalunya',
         category: 'propietats',
-        description: 'Apartament modern en gratacels de luxe a Fortaleza, optimitzat per a lloguer vacacional tipus Airbnb amb alta ocupació.',
-        investment: '€180.000',
-        annualReturn: '10-12%',
+        description: 'Inversió en habitatge residencial a Catalunya per a lloguer de llarga durada. Anàlisi detallat de rentabilitat bruta vs neta considerant tots els impostos i despeses del mercat espanyol.',
+        investment: '€300.000',
+        annualReturn: '3-5% (net)',
         pros: [
-          'Inversió inicial moderada',
-          'Alta demanda de lloguer vacacional',
-          'Gestió relativament senzilla',
-          'Ciutat en creixement',
-          'Infraestructures modernes'
+          'Mercat immobiliari estable i madur',
+          'Demanda constant de lloguer residencial',
+          'Revalorització històrica del 5-9% anual',
+          'Fiscalitat coneguda i previsible',
+          'Protecció contra inflació',
+          'Actiu tangible amb valor intrínsec'
         ],
         cons: [
-          'Competència elevada al mercat Airbnb',
-          'Costos de manteniment i gestió',
-          'Fluctuació d\'ocupació',
-          'Regulacions canviants per lloguers turístics'
+          'Impostos elevats (ITP 12%, guanys capital 21%)',
+          'Despeses recurrents significatives',
+          'Baixa liquiditat de l\'actiu',
+          'Necessitat de gestió activa',
+          'Risc d\'impagament de llogaters',
+          'Regulacions de lloguer restrictives'
         ],
         images: ['/placeholder-apartment.jpg']
       }

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Check, X, ArrowLeft } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { InvestmentCategory, InvestmentIdea } from '@/types/investment';
+import RealEstateCAGR from '@/components/RealEstateCAGR';
 
 export default function IdeaPage({ params }: { params: Promise<{ id: string }> }) {
   const [idea, setIdea] = useState<InvestmentIdea | null>(null);
@@ -105,6 +106,13 @@ export default function IdeaPage({ params }: { params: Promise<{ id: string }> }
                 <h2 className="text-3xl font-bold text-white mb-6">Descripció</h2>
                 <p className="text-xl text-slate-300 leading-relaxed">{idea.description}</p>
               </section>
+
+              {idea.id === 'inversio-catalunya' && (
+                <section className="mb-12">
+                  <h2 className="text-3xl font-bold text-white mb-6">Anàlisi de Rentabilitat</h2>
+                  <RealEstateCAGR />
+                </section>
+              )}
 
               <section className="mb-12">
                 <h2 className="text-3xl font-bold text-white mb-8">Anàlisi</h2>
