@@ -6,7 +6,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 const PousadaSoleLuaCAGR = () => {
   const [revalorizacion, setRevalorizacion] = useState(10);
   const [ocupacionAnual, setOcupacionAnual] = useState(55);
-  const [diariaPorHabitacion, setDiariaPorHabitacion] = useState(65);
+  const [diariaPorHabitacion, setDiariaPorHabitacion] = useState(38);
   
   const precioCompraEuros = 340000;
   
@@ -146,21 +146,21 @@ const PousadaSoleLuaCAGR = () => {
 
           <div className="mb-4">
             <label className="block text-sm font-medium text-slate-200 mb-2">
-              Tarifa per habitació (amb esmorzar): {diariaPorHabitacion}€/nit
+              Tarifa per habitació (amb esmorzar): {diariaPorHabitacion}€/nit (preu real Pousada: 34-40€)
             </label>
             <div className="flex items-center gap-4">
               <input
                 type="range"
-                min="40"
-                max="100"
-                step="5"
+                min="30"
+                max="80"
+                step="2"
                 value={diariaPorHabitacion}
                 onChange={(e) => setDiariaPorHabitacion(parseFloat(e.target.value))}
                 className="w-64"
               />
               <div className="text-sm text-slate-300">
-                <button onClick={() => setDiariaPorHabitacion(50)} className="px-3 py-1 bg-green-600 rounded mr-2 hover:bg-green-700">50€ (baixa)</button>
-                <button onClick={() => setDiariaPorHabitacion(80)} className="px-3 py-1 bg-green-600 rounded hover:bg-green-700">80€ (alta)</button>
+                <button onClick={() => setDiariaPorHabitacion(34)} className="px-3 py-1 bg-green-600 rounded mr-2 hover:bg-green-700">34€ (real)</button>
+                <button onClick={() => setDiariaPorHabitacion(60)} className="px-3 py-1 bg-green-600 rounded hover:bg-green-700">60€ (òptima)</button>
               </div>
             </div>
           </div>
@@ -263,6 +263,26 @@ const PousadaSoleLuaCAGR = () => {
             <p><strong>Rendiment total net (any 10):</strong> {calcularRentabilidadCombinada(10).toFixed(2)}%</p>
             <p><strong>Benefici net anual:</strong> ~{Math.round((calcularRentabilidadNegocioNeta() / 100) * precioCompraEuros).toLocaleString()}€</p>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-4 p-4 bg-red-900/30 rounded-lg border border-red-500/30">
+        <h3 className="font-semibold text-white mb-2">⚠️ Anàlisi de viabilitat del negoci:</h3>
+        <div className="text-sm text-slate-300 space-y-2">
+          <p><strong>Problema actual:</strong> Amb els preus reals (34-40€/nit) i ocupació típica (45-65%), el negoci genera pèrdues operatives.</p>
+          <div className="mt-2 p-3 bg-red-800/30 rounded border border-red-600/30">
+            <p><strong>Càlcul amb valors actuals:</strong></p>
+            <p>• Ingressos: {Math.round(ingresosBrutosAnuales).toLocaleString()}€/any</p>
+            <p>• Despeses totals: {Math.round(ingresosBrutosAnuales * 0.11 + ingresosBrutosAnuales * 0.40 + gastosMantenimiento + gestoriaAnual).toLocaleString()}€/any</p>
+            <p>• <span className="text-red-400 font-semibold">Pèrdua neta: {Math.round(ingresosBrutosAnuales - (ingresosBrutosAnuales * 0.11 + ingresosBrutosAnuales * 0.40 + gastosMantenimiento + gestoriaAnual)).toLocaleString()}€/any</span></p>
+          </div>
+          <p><strong>Per ser rendible caldria:</strong></p>
+          <ul className="ml-4 space-y-1">
+            <li>• Augmentar ocupació a 75%+ (temporada alta tot l&#39;any)</li>
+            <li>• O augmentar tarifa a 60-70€/nit (servicios premium)</li>
+            <li>• O reduir costos operatives del 40% al 30%</li>
+          </ul>
+          <p><strong>Escenari viable:</strong> 60€/nit × 70% ocupació = benefici net ~+3.000€/any</p>
         </div>
       </div>
 
