@@ -117,7 +117,7 @@ const RealEstateCAGR = () => {
             label={{ value: 'CAGR (%)', angle: -90, position: 'insideLeft', fill: '#cbd5e1' }}
           />
           <Tooltip 
-            formatter={(value: number) => `${value.toFixed(2)}%`}
+            formatter={(value) => typeof value === 'number' ? `${value.toFixed(2)}%` : ''}
             labelFormatter={(label) => `Any ${label}`}
             contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
             labelStyle={{ color: '#cbd5e1' }}
