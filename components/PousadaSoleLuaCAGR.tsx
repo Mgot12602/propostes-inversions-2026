@@ -61,7 +61,7 @@ const PousadaSoleLuaCAGR = () => {
     const beneficioNeto = beneficioTrasRetencion - impuestoEspana;
     
     const rentabilidad = (beneficioNeto / precioCompraEuros) * 100;
-    console.log(`Debug Pousada: Ingressos=${ingresosBrutosAnuales}, BeneficioNeto=${beneficioNeto}, Rentabilidad=${rentabilidad}%`);
+    console.log(`Debug Pousada: Ingressos=${ingresosBrutosAnuales}, Impuestos=${impuestoSimples}, Costos=${costos}, Mantenimiento=${gastosMantenimiento}, Gestoria=${gestoriaAnual}, BeneficioBruto=${beneficioBruto}, Retencion=${retencionBrasil}, ImpuestoEspana=${impuestoEspana}, BeneficioNeto=${beneficioNeto}, Rentabilidad=${rentabilidad}%`);
     return rentabilidad;
   };
   
