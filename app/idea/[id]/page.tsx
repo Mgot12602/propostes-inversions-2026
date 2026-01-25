@@ -10,7 +10,8 @@ import Navbar from '@/components/Navbar';
 import { InvestmentCategory, InvestmentIdea } from '@/types/investment';
 import RealEstateCAGR from '@/components/RealEstateCAGR';
 import FinancialProductsCAGR from '@/components/FinancialProductsCAGR';
-import BrazilRealEstateCAGR from '@/components/BrazilRealEstateCAGR';
+import PousadaSoleLuaCAGR from '@/components/PousadaSoleLuaCAGR';
+import BrazilLandConstructionCAGR from '@/components/BrazilLandConstructionCAGR';
 
 export default function IdeaPage({ params }: { params: Promise<{ id: string }> }) {
   const [idea, setIdea] = useState<InvestmentIdea | null>(null);
@@ -133,7 +134,14 @@ export default function IdeaPage({ params }: { params: Promise<{ id: string }> }
               {idea.id === 'hotel-pousada' && (
                 <section className="mb-12">
                   <h2 className="text-3xl font-bold text-white mb-6">Anàlisi de Rentabilitat</h2>
-                  <BrazilRealEstateCAGR />
+                  <PousadaSoleLuaCAGR />
+                </section>
+              )}
+
+              {idea.id === 'terreny-mar' && (
+                <section className="mb-12">
+                  <h2 className="text-3xl font-bold text-white mb-6">Anàlisi de Rentabilitat</h2>
+                  <BrazilLandConstructionCAGR />
                 </section>
               )}
 
