@@ -18,17 +18,15 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Edit, Upload, Trash2 } from 'lucide-react';
+import { ArrowLeft, Edit } from 'lucide-react';
 
 export default function AdminPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [investmentData, setInvestmentData] = useState<InvestmentCategory[]>([]);
-  const [loading, setLoading] = useState(true);
   const [editingIdea, setEditingIdea] = useState<InvestmentIdea | null>(null);
   const [editingCategory, setEditingCategory] = useState<string>('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const auth = localStorage.getItem('admin_authenticated');
@@ -48,10 +46,8 @@ export default function AdminPage() {
       const response = await fetch('/api/investments');
       const data = await response.json();
       setInvestmentData(data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error loading data:', error);
-      setLoading(false);
+    } catch (err) {
+      console.error('Error loading data:', err);
     }
   };
 
@@ -103,81 +99,11 @@ export default function AdminPage() {
       toast.success('Canvis desats correctament!', {
         description: 'Les dades s\'han actualitzat permanentment.',
       });
-    } catch (error) {
+    } catch {
       toast.error('Error al desar els canvis', {
         description: 'Si us plau, torna-ho a intentar.',
       });
     }
-  };
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleDeleteImage = async (imageIndex: number) => {
-    if (!editingIdea) return;
-
-    try {
-      const currentImages = editingIdea.images || [];
-      const updatedImages = currentImages.filter((_, idx) => idx !== imageIndex);
-
-      const response = await fetch('/api/investments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          categoryId: editingCategory,
-          ideaId: editingIdea.id,
-          updatedIdea: {
-            images: updatedImages,
-          },
-        }),
-      });
-
-      if (!response.ok) throw new Error('Failed to delete image');
-
-      await loadData();
-      toast.success('Imatge eliminada correctament!');
-    } catch (error) {
-      toast.error('Error al eliminar la imatge');
-    }
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0 || !editingIdea) return;
-
-    const file = files[0];
-    const reader = new FileReader();
-
-    reader.onloadend = async () => {
-      const base64String = reader.result as string;
-      
-      try {
-        const currentImages = editingIdea.images || [];
-        const updatedImages = [...currentImages, base64String];
-
-        const response = await fetch('/api/investments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            categoryId: editingCategory,
-            ideaId: editingIdea.id,
-            updatedIdea: {
-              images: updatedImages,
-            },
-          }),
-        });
-
-        if (!response.ok) throw new Error('Failed to upload image');
-
-        await loadData();
-        toast.success('Imatge pujada correctament!');
-      } catch (error) {
-        toast.error('Error al pujar la imatge');
-      }
-    };
-
-    reader.readAsDataURL(file);
   };
 
   const handleLogin = (e: React.FormEvent) => {
@@ -327,49 +253,6 @@ export default function AdminPage() {
                               <div>
                                 <Label htmlFor="cons">Inconvenients (un per línia)</Label>
                                 <Textarea id="cons" name="cons" defaultValue={idea.cons.join('\n')} rows={5} />
-                              </div>
-                              <div>
-                                <Label>Galeria d&apos;imatges</Label>
-                                <div className="grid grid-cols-3 gap-2 mt-2">
-                                  {idea.images && idea.images.length > 0 && idea.images.map((img, idx) => (
-                                    <div
-                                      key={idx}
-                                      className="aspect-video bg-slate-200 rounded overflow-hidden relative group"
-                                    >
-                                      <img 
-                                        src={img} 
-                                        alt={`Imatge ${idx + 1}`}
-                                        className="w-full h-full object-cover"
-                                      />
-                                      <button 
-                                        type="button" 
-                                        onClick={() => handleDeleteImage(idx)}
-                                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </button>
-                                    </div>
-                                  ))}
-                                  <button 
-                                    onClick={handleUploadClick}
-                                    type="button"
-                                    className="aspect-video bg-blue-100 rounded flex items-center justify-center border-2 border-dashed border-blue-300 hover:bg-blue-200 transition-colors"
-                                  >
-                                    <Upload className="h-6 w-6 text-blue-600" />
-                                  </button>
-                                  <input
-                                    ref={fileInputRef}
-                                    type="file"
-                                    accept="image/*,video/*"
-                                    className="hidden"
-                                    onChange={handleFileChange}
-                                  />
-                                </div>
-                                <p className="text-xs text-slate-500 mt-2">
-                                  {idea.images && idea.images.length > 0 
-                                    ? `${idea.images.length} imatge(s). Clica + per afegir més o X per eliminar.`
-                                    : 'Clica per pujar imatges o vídeos'}
-                                </p>
                               </div>
                               <Button type="submit" className="w-full">Desar canvis</Button>
                             </form>

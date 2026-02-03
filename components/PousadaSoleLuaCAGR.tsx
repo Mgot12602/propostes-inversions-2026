@@ -281,7 +281,7 @@ const PousadaSoleLuaCAGR = () => {
           <ul className="ml-4 space-y-1">
             <li>• Model de negoci eficient amb costos operatius controlats (40%)</li>
             <li>• Preus competitius per al mercat de Paracuru</li>
-            <li>• Ocupació estable durant tot l'any</li>
+            <li>• Ocupació estable durant tot l&apos;any</li>
           </ul>
           <p><strong>Potencial de millora:</strong> Augmentant ocupació a 70%+ o tarifa a 50-60€/nit es pot incrementar el benefici net a +8.000€/any</p>
         </div>
