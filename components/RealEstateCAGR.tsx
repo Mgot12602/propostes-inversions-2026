@@ -18,13 +18,11 @@ const RealEstateCAGR = () => {
   const [propertyType, setPropertyType] = useState<'second-hand' | 'new'>('second-hand');
   const [hasMortgage, setHasMortgage] = useState(false);
   const [loanAmount, setLoanAmount] = useState(200000);
-  const [interestRate, setInterestRate] = useState(3.5);
-  const [loanYears, setLoanYears] = useState(25);
   
   const [notaryFeesPct, setNotaryFeesPct] = useState(0.7);
   const [hasLawyer, setHasLawyer] = useState(true);
   const [lawyerFeesPct, setLawyerFeesPct] = useState(1.0);
-  const [gestoriaFee, setGestoriaFee] = useState(450);
+  const [gestoriaFee] = useState(450);
   
   const [yearsToHold, setYearsToHold] = useState(10);
   const [agentCommissionPct, setAgentCommissionPct] = useState(3);
@@ -35,7 +33,7 @@ const RealEstateCAGR = () => {
   const [insurance, setInsurance] = useState(350);
   const [maintenancePct, setMaintenancePct] = useState(1.0);
   const [managementHours, setManagementHours] = useState(2);
-  const [hourlyRate, setHourlyRate] = useState(36);
+  const [hourlyRate] = useState(36);
   
   const [monthlyRent, setMonthlyRent] = useState(1000);
   const [isRented, setIsRented] = useState(true);
@@ -133,26 +131,9 @@ const RealEstateCAGR = () => {
     return yearlyData;
   };
   
-  const calculateSellingCosts = () => {
-    const finalPropertyValue = propertyPrice * Math.pow(1 + appreciationRate / 100, yearsToHold);
-    const agentCommission = finalPropertyValue * (agentCommissionPct / 100);
-    const capitalGain = finalPropertyValue - propertyPrice;
-    const capitalGainsTax = capitalGain > 0 ? capitalGain * 0.25 : 0;
-    const notarySelling = finalPropertyValue * 0.003;
-    const registrySelling = finalPropertyValue * 0.001;
-    
-    return {
-      agentCommission,
-      capitalGainsTax,
-      notarySelling,
-      registrySelling,
-      totalSellingCosts: agentCommission + capitalGainsTax + notarySelling + registrySelling
-    };
-  };
   
   const buyingCosts = calculateBuyingCosts();
   const yearlyData = calculateYearlyData();
-  const sellingCosts = calculateSellingCosts();
   
   const finalYear = yearlyData[yearlyData.length - 1];
   const inflacionEspana = 2.4;
@@ -528,7 +509,7 @@ const RealEstateCAGR = () => {
             <XAxis dataKey="year" stroke="#cbd5e1" label={{ value: 'Anys', position: 'insideBottom', offset: -5, fill: '#cbd5e1' }} />
             <YAxis stroke="#cbd5e1" label={{ value: 'CAGR (%)', angle: -90, position: 'insideLeft', fill: '#cbd5e1' }} />
             <Tooltip 
-              formatter={(value: number) => `${value.toFixed(2)}%`}
+              formatter={(value: number | undefined) => value !== undefined ? `${value.toFixed(2)}%` : ''}
               contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
               labelStyle={{ color: '#cbd5e1' }}
             />
@@ -580,7 +561,7 @@ const RealEstateCAGR = () => {
             <li>El valor actual de la propietat (amb revalorització del {appreciationRate}% anual)</li>
             <li>Tots els fluxos de caixa nets acumulats (lloguers - despeses - impostos)</li>
           </ul>
-          <p className="mt-3"><strong>Important:</strong> Aquest càlcul reflecteix el creixement compost, no la mitjana simple. Si guanyes un 10% el primer any i un 10% el segon any sobre la nova base, el CAGR serà exactament 10%, però l'increment absolut del segon any serà superior.</p>
+          <p className="mt-3"><strong>Important:</strong> Aquest càlcul reflecteix el creixement compost, no la mitjana simple. Si guanyes un 10% el primer any i un 10% el segon any sobre la nova base, el CAGR serà exactament 10%, però l&apos;increment absolut del segon any serà superior.</p>
           <p className="mt-2"><strong>Fórmula:</strong> CAGR = ((Riquesa Final / Inversió Inicial)^(1/anys) - 1) × 100</p>
         </div>
       </div>
