@@ -88,24 +88,6 @@ export default function IdeaPage({ params }: { params: Promise<{ id: string }> }
 
             <div className="px-10 py-10">
               <section className="mb-12">
-                <h2 className="text-3xl font-bold text-white mb-6">Galeria</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {idea.images.map((image, index) => (
-                    <div
-                      key={index}
-                      className="aspect-video bg-gradient-to-br from-slate-700 to-slate-800 rounded-xl overflow-hidden border-2 border-slate-600 hover:border-blue-500 transition-all hover:scale-105"
-                    >
-                      <img 
-                        src={image} 
-                        alt={`${idea.title} - Imatge ${index + 1}`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              <section className="mb-12">
                 <h2 className="text-3xl font-bold text-white mb-6">Descripció</h2>
                 <p className="text-xl text-slate-300 leading-relaxed">{idea.description}</p>
               </section>

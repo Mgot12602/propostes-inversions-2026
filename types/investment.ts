@@ -6,7 +6,6 @@ export interface InvestmentIdea {
   annualReturn: string;
   pros: string[];
   cons: string[];
-  images: string[];
   category: string;
 }
 
