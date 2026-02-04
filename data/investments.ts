@@ -30,5 +30,36 @@ export const investmentData: InvestmentCategory[] = [
         ]
       }
     ]
+  },
+  {
+    id: 'fons-indexats',
+    title: 'Fons Indexats i Bons',
+    ideas: [
+      {
+        id: 'etfs-bons',
+        title: 'ETFs i Bons - Comparativa Global',
+        category: 'fons-indexats',
+        description: 'Inversió diversificada en fons indexats (MSCI World, Nasdaq-100, S&P 500, MSCI World SRI) i bons AAA. Anàlisi comparativa amb dades històriques reals (2004-2024) i costos MyInvestor.',
+        investment: '€50.000',
+        annualReturn: '6-12% (ETFs) / 2-3% (Bons)',
+        pros: [
+          'Alta diversificació geogràfica i sectorial',
+          'Liquiditat immediata (venda en 2-3 dies)',
+          'Costos molt baixos amb MyInvestor (0.12%)',
+          'Sense comissió de custòdia',
+          'Fiscalitat eficient (diferiment impostos)',
+          'Dades històriques de 20+ anys disponibles',
+          'Gestió passiva sense necessitat d\'expertise'
+        ],
+        cons: [
+          'Volatilitat significativa a curt termini',
+          'Risc de mercat (caigudes del 30-40% possibles)',
+          'Impost Societats 25% sobre guanys',
+          'Rendiments no garantits',
+          'Exposició a divises (USD/EUR)',
+          'Necessita disciplina per no vendre en crisis'
+        ]
+      }
+    ]
   }
 ];
