@@ -24,7 +24,7 @@ const RealEstateCAGR = () => {
   const [lawyerFeesPct, setLawyerFeesPct] = useState(1.0);
   const [gestoriaFee] = useState(450);
   
-  const [yearsToHold, setYearsToHold] = useState(10);
+  const [yearsToHold, setYearsToHold] = useState(20);
   const [agentCommissionPct, setAgentCommissionPct] = useState(3);
   
   const [ibiRate, setIbiRate] = useState(0.7);
@@ -112,10 +112,21 @@ const RealEstateCAGR = () => {
       
       accumulatedCashFlow += netCashFlow;
       
-      const accumulatedWealth = currentPropertyValue + accumulatedCashFlow - buyingCosts.totalInvestment;
-      const cagr = accumulatedWealth > 0 
-        ? (Math.pow(accumulatedWealth / buyingCosts.totalInvestment, 1 / year) - 1) * 100
-        : 0;
+      const agentCommission = currentPropertyValue * (agentCommissionPct / 100);
+      const capitalGain = currentPropertyValue - propertyPrice;
+      const capitalGainsTax = capitalGain > 0 ? capitalGain * 0.25 : 0;
+      const notarySelling = currentPropertyValue * 0.003;
+      const registrySelling = currentPropertyValue * 0.001;
+      const totalSellingCosts = agentCommission + capitalGainsTax + notarySelling + registrySelling;
+      
+      const netPropertyValue = currentPropertyValue - totalSellingCosts;
+      const totalValue = netPropertyValue + accumulatedCashFlow;
+      
+      const accumulatedWealth = totalValue - buyingCosts.totalInvestment;
+      
+      const cagr = totalValue > 0 
+        ? (Math.pow(totalValue / buyingCosts.totalInvestment, 1 / year) - 1) * 100
+        : -100;
       
       yearlyData.push({
         year,
