@@ -27,8 +27,7 @@ const RealEstateCAGR = () => {
   const [yearsToHold, setYearsToHold] = useState(20);
   const [agentCommissionPct, setAgentCommissionPct] = useState(3);
   
-  const [ibiRate, setIbiRate] = useState(0.7);
-  const [cadastralValuePct, setCadastralValuePct] = useState(60);
+  const [ibiRate, setIbiRate] = useState(0.4);
   const [communityFees, setCommunityFees] = useState(80);
   const [insurance, setInsurance] = useState(350);
   const [maintenancePct, setMaintenancePct] = useState(1.0);
@@ -91,9 +90,8 @@ const RealEstateCAGR = () => {
     const buyingCosts = calculateBuyingCosts();
     const yearlyData: YearData[] = [];
     
-    const cadastralValue = propertyPrice * (cadastralValuePct / 100);
     const annualRent = monthlyRent * 12;
-    const annualIBI = cadastralValue * (ibiRate / 100);
+    const annualIBI = propertyPrice * (ibiRate / 100);
     const annualCommunity = communityFees * 12;
     const annualMaintenance = propertyPrice * (maintenancePct / 100);
     const annualManagement = managementHours * 12 * hourlyRate;
@@ -150,293 +148,93 @@ const RealEstateCAGR = () => {
   const inflacionEspana = 2.4;
   
   return (
-    <div className="w-full space-y-6">
-      <div className="bg-slate-800 rounded-xl p-6">
-        <h2 className="text-3xl font-bold text-white mb-6">
-          Calculadora Inversió Immobiliària Catalunya
-        </h2>
+    <div className="w-full space-y-3">
+      <div className="bg-slate-800 rounded-xl p-3">
+        <h2 className="text-xl font-bold text-white mb-3">Calculadora Catalunya</h2>
         
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-white">Paràmetres de Compra</h3>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">
-                Preu propietat: €{propertyPrice.toLocaleString()}
-              </label>
-              <input
-                type="range"
-                min="100000"
-                max="1000000"
-                step="10000"
-                value={propertyPrice}
-                onChange={(e) => setPropertyPrice(parseFloat(e.target.value))}
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">
-                Tipus de propietat
-              </label>
-              <select
-                value={propertyType}
-                onChange={(e) => setPropertyType(e.target.value as 'second-hand' | 'new')}
-                className="w-full px-3 py-2 bg-slate-700 text-white rounded"
-              >
-                <option value="second-hand">Segona mà (ITP 10%)</option>
-                <option value="new">Nova (IVA 10%)</option>
-              </select>
-            </div>
-            
-            <div>
-              <label className="flex items-center space-x-2 text-slate-200">
-                <input
-                  type="checkbox"
-                  checked={hasMortgage}
-                  onChange={(e) => setHasMortgage(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <span>Hipoteca</span>
-              </label>
-            </div>
-            
+        <div className="grid grid-cols-4 gap-2 text-xs mb-3">
+          <div className="space-y-1">
+            <label className="text-slate-300">Preu: €{propertyPrice.toLocaleString()}</label>
+            <input type="range" min="100000" max="1000000" step="10000" value={propertyPrice} onChange={(e) => setPropertyPrice(parseFloat(e.target.value))} className="w-full h-1" />
+            <select value={propertyType} onChange={(e) => setPropertyType(e.target.value as 'second-hand' | 'new')} className="w-full px-2 py-1 bg-slate-700 text-white rounded text-xs">
+              <option value="second-hand">2a mà</option>
+              <option value="new">Nova</option>
+            </select>
+            <label className="flex items-center space-x-1">
+              <input type="checkbox" checked={hasMortgage} onChange={(e) => setHasMortgage(e.target.checked)} className="w-3 h-3" />
+              <span className="text-slate-300">Hipoteca</span>
+            </label>
             {hasMortgage && (
-              <div className="ml-6 space-y-3">
-                <div>
-                  <label className="block text-sm text-slate-300 mb-1">
-                    Import préstec: €{loanAmount.toLocaleString()}
-                  </label>
-                  <input
-                    type="range"
-                    min="50000"
-                    max={propertyPrice * 0.8}
-                    step="5000"
-                    value={loanAmount}
-                    onChange={(e) => setLoanAmount(parseFloat(e.target.value))}
-                    className="w-full"
-                  />
-                </div>
-              </div>
+              <>
+                <label className="text-slate-300">Préstec: €{loanAmount.toLocaleString()}</label>
+                <input type="range" min="50000" max={propertyPrice * 0.8} step="5000" value={loanAmount} onChange={(e) => setLoanAmount(parseFloat(e.target.value))} className="w-full h-1" />
+              </>
             )}
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">
-                Notaria: {notaryFeesPct}%
-              </label>
-              <input
-                type="range"
-                min="0.5"
-                max="1.5"
-                step="0.1"
-                value={notaryFeesPct}
-                onChange={(e) => setNotaryFeesPct(parseFloat(e.target.value))}
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <label className="flex items-center space-x-2 text-slate-200">
-                <input
-                  type="checkbox"
-                  checked={hasLawyer}
-                  onChange={(e) => setHasLawyer(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <span>Advocat ({lawyerFeesPct}%)</span>
-              </label>
-              {hasLawyer && (
-                <input
-                  type="range"
-                  min="0.5"
-                  max="2"
-                  step="0.1"
-                  value={lawyerFeesPct}
-                  onChange={(e) => setLawyerFeesPct(parseFloat(e.target.value))}
-                  className="w-full mt-2"
-                />
-              )}
-            </div>
           </div>
           
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-white">Despeses Anuals</h3>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">
-                IBI: {ibiRate}% valor cadastral
-              </label>
-              <input
-                type="range"
-                min="0.4"
-                max="1.1"
-                step="0.1"
-                value={ibiRate}
-                onChange={(e) => setIbiRate(parseFloat(e.target.value))}
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">
-                Valor cadastral: {cadastralValuePct}% del preu
-              </label>
-              <input
-                type="range"
-                min="50"
-                max="70"
-                step="5"
-                value={cadastralValuePct}
-                onChange={(e) => setCadastralValuePct(parseFloat(e.target.value))}
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">
-                Comunitat: €{communityFees}/mes
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="200"
-                step="10"
-                value={communityFees}
-                onChange={(e) => setCommunityFees(parseFloat(e.target.value))}
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">
-                Assegurança: €{insurance}/any
-              </label>
-              <input
-                type="range"
-                min="200"
-                max="600"
-                step="50"
-                value={insurance}
-                onChange={(e) => setInsurance(parseFloat(e.target.value))}
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">
-                Manteniment: {maintenancePct}% anual
-              </label>
-              <input
-                type="range"
-                min="0.5"
-                max="2"
-                step="0.1"
-                value={maintenancePct}
-                onChange={(e) => setMaintenancePct(parseFloat(e.target.value))}
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">
-                Gestió: {managementHours}h/mes × €{hourlyRate}/h
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="10"
-                step="0.5"
-                value={managementHours}
-                onChange={(e) => setManagementHours(parseFloat(e.target.value))}
-                className="w-full"
-              />
-            </div>
+          <div className="space-y-1">
+            <label className="text-slate-300">Notaria: {notaryFeesPct}%</label>
+            <input type="range" min="0.5" max="1.5" step="0.1" value={notaryFeesPct} onChange={(e) => setNotaryFeesPct(parseFloat(e.target.value))} className="w-full h-1" />
+            <label className="flex items-center space-x-1">
+              <input type="checkbox" checked={hasLawyer} onChange={(e) => setHasLawyer(e.target.checked)} className="w-3 h-3" />
+              <span className="text-slate-300">Advocat {lawyerFeesPct}%</span>
+            </label>
+            {hasLawyer && <input type="range" min="0.5" max="2" step="0.1" value={lawyerFeesPct} onChange={(e) => setLawyerFeesPct(parseFloat(e.target.value))} className="w-full h-1" />}
+            <label className="text-slate-300">IBI: {ibiRate}%</label>
+            <input type="range" min="0.4" max="1.1" step="0.1" value={ibiRate} onChange={(e) => setIbiRate(parseFloat(e.target.value))} className="w-full h-1" />
+            <label className="text-slate-300">Comunitat: €{communityFees}/mes</label>
+            <input type="range" min="0" max="200" step="10" value={communityFees} onChange={(e) => setCommunityFees(parseFloat(e.target.value))} className="w-full h-1" />
           </div>
-        </div>
-        
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-white">Ingressos</h3>
-            
-            <div>
-              <label className="flex items-center space-x-2 text-slate-200 mb-3">
-                <input
-                  type="checkbox"
-                  checked={isRented}
-                  onChange={(e) => setIsRented(e.target.checked)}
-                  className="w-4 h-4"
-                />
-                <span>Llogada</span>
-              </label>
-            </div>
-            
+          
+          <div className="space-y-1">
+            <label className="text-slate-300">Assegurança: €{insurance}/any</label>
+            <input type="range" min="200" max="600" step="50" value={insurance} onChange={(e) => setInsurance(parseFloat(e.target.value))} className="w-full h-1" />
+            <label className="text-slate-300">Manteniment: {maintenancePct}%</label>
+            <input type="range" min="0.5" max="2" step="0.1" value={maintenancePct} onChange={(e) => setMaintenancePct(parseFloat(e.target.value))} className="w-full h-1" />
+            <label className="text-slate-300">Gestió: {managementHours}h/mes</label>
+            <input type="range" min="0" max="10" step="0.5" value={managementHours} onChange={(e) => setManagementHours(parseFloat(e.target.value))} className="w-full h-1" />
+            <label className="flex items-center space-x-1">
+              <input type="checkbox" checked={isRented} onChange={(e) => setIsRented(e.target.checked)} className="w-3 h-3" />
+              <span className="text-slate-300">Llogada</span>
+            </label>
             {isRented && (
-              <div>
-                <label className="block text-sm font-medium text-slate-200 mb-2">
-                  Lloguer mensual: €{monthlyRent}
-                </label>
-                <input
-                  type="range"
-                  min="500"
-                  max="3000"
-                  step="50"
-                  value={monthlyRent}
-                  onChange={(e) => setMonthlyRent(parseFloat(e.target.value))}
-                  className="w-full"
-                />
-              </div>
+              <>
+                <label className="text-slate-300">Lloguer: €{monthlyRent}/mes</label>
+                <input type="range" min="500" max="3000" step="50" value={monthlyRent} onChange={(e) => setMonthlyRent(parseFloat(e.target.value))} className="w-full h-1" />
+              </>
             )}
           </div>
           
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold text-white">Venda</h3>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">
-                Anys a mantenir: {yearsToHold}
-              </label>
-              <input
-                type="range"
-                min="1"
-                max="30"
-                step="1"
-                value={yearsToHold}
-                onChange={(e) => setYearsToHold(parseFloat(e.target.value))}
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">
-                Comissió immobiliària: {agentCommissionPct}%
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="5"
-                step="0.5"
-                value={agentCommissionPct}
-                onChange={(e) => setAgentCommissionPct(parseFloat(e.target.value))}
-                className="w-full"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-slate-200 mb-2">
-                Revalorització anual: {appreciationRate}%
-              </label>
-              <input
-                type="range"
-                min="2"
-                max="9"
-                step="0.5"
-                value={appreciationRate}
-                onChange={(e) => setAppreciationRate(parseFloat(e.target.value))}
-                className="w-full"
-              />
+          <div className="space-y-1">
+            <label className="text-slate-300">Anys: {yearsToHold}</label>
+            <input type="range" min="1" max="30" step="1" value={yearsToHold} onChange={(e) => setYearsToHold(parseFloat(e.target.value))} className="w-full h-1" />
+            <label className="text-slate-300">Comissió: {agentCommissionPct}%</label>
+            <input type="range" min="0" max="5" step="0.5" value={agentCommissionPct} onChange={(e) => setAgentCommissionPct(parseFloat(e.target.value))} className="w-full h-1" />
+            <label className="text-slate-300">Revalorització: {appreciationRate}%</label>
+            <input type="range" min="2" max="9" step="0.5" value={appreciationRate} onChange={(e) => setAppreciationRate(parseFloat(e.target.value))} className="w-full h-1" />
+            <div className="bg-purple-900/30 p-2 rounded mt-2">
+              <div className="text-slate-400 text-[10px]">CAGR</div>
+              <div className="text-lg font-bold text-white">{finalYear?.cagr.toFixed(2)}%</div>
             </div>
           </div>
         </div>
+      </div>
+      
+      <div className="bg-slate-800 rounded-xl p-3">
+        <ResponsiveContainer width="100%" height={350}>
+          <LineChart data={yearlyData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
+            <XAxis dataKey="year" stroke="#cbd5e1" />
+            <YAxis stroke="#cbd5e1" />
+            <Tooltip 
+              formatter={(value: number | undefined) => value !== undefined ? `${value.toFixed(2)}%` : ''}
+              contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
+            />
+            <Legend />
+            <Line type="monotone" dataKey="cagr" stroke="#3b82f6" strokeWidth={2} name="CAGR" dot={false} />
+            <Line type="monotone" dataKey={() => inflacionEspana} stroke="#ef4444" strokeWidth={1} strokeDasharray="3 3" name="Inflació 2.4%" dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
       
       <div className="bg-slate-800 rounded-xl p-6">
