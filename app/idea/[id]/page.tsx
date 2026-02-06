@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Check, X, ArrowLeft } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { InvestmentCategory, InvestmentIdea } from '@/types/investment';
@@ -77,14 +76,6 @@ export default function IdeaPage({ params }: { params: Promise<{ id: string }> }
             <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-purple-700 px-10 py-16 text-white relative overflow-hidden">
               <div className="absolute inset-0 bg-black/20"></div>
               <h1 className="text-5xl md:text-6xl font-bold mb-6 relative z-10">{idea.title}</h1>
-              <div className="flex flex-wrap gap-4 items-center relative z-10">
-                <Badge variant="secondary" className="bg-white/20 backdrop-blur-sm text-white text-xl px-6 py-3 border border-white/30">
-                  Inversió: {idea.investment}
-                </Badge>
-                <Badge variant="secondary" className="bg-gradient-to-r from-green-500 to-green-600 text-white text-xl px-6 py-3 shadow-lg">
-                  Retorn: {idea.annualReturn}
-                </Badge>
-              </div>
             </div>
 
             <div className="px-10 py-10">

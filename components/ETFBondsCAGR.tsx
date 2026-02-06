@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useState, useMemo } from 'react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 interface AssetConfig {
   id: string;
@@ -17,13 +17,38 @@ interface YearData {
   [key: string]: number;
 }
 
-interface HistoricalDataPoint {
-  year: number;
-  [key: string]: number;
-}
+const historicalReturns: Record<string, Record<number, number>> = {
+  'msci-world': {
+    2004: 15.2, 2005: 9.5, 2006: 20.1, 2007: 9.0, 2008: -40.3,
+    2009: 30.0, 2010: 11.8, 2011: -5.0, 2012: 15.8, 2013: 26.7,
+    2014: 4.9, 2015: -0.3, 2016: 7.5, 2017: 22.4, 2018: -8.2,
+    2019: 27.7, 2020: 15.9, 2021: 21.8, 2022: -17.7, 2023: 23.8, 2024: 18.2
+  },
+  'nasdaq': {
+    2004: 8.6, 2005: 1.4, 2006: 9.5, 2007: 19.2, 2008: -41.9,
+    2009: 43.9, 2010: 19.2, 2011: 2.7, 2012: 17.5, 2013: 38.3,
+    2014: 19.2, 2015: 9.7, 2016: 7.5, 2017: 32.0, 2018: -0.1,
+    2019: 38.7, 2020: 47.6, 2021: 26.6, 2022: -32.5, 2023: 54.8, 2024: 28.6
+  },
+  'sp500': {
+    2004: 10.9, 2005: 4.9, 2006: 15.8, 2007: 5.5, 2008: -37.0,
+    2009: 26.5, 2010: 15.1, 2011: 2.1, 2012: 16.0, 2013: 32.4,
+    2014: 13.7, 2015: 1.4, 2016: 12.0, 2017: 21.8, 2018: -4.4,
+    2019: 31.5, 2020: 18.4, 2021: 28.7, 2022: -18.1, 2023: 26.3, 2024: 24.2
+  },
+  'msci-screened': {
+    2016: 7.2, 2017: 21.8, 2018: -8.5, 2019: 27.2, 2020: 15.4,
+    2021: 21.3, 2022: -18.1, 2023: 23.2, 2024: 17.8
+  },
+  'bonds-aaa': {
+    2004: 7.3, 2005: 3.4, 2006: 1.2, 2007: 2.8, 2008: 8.5,
+    2009: 5.2, 2010: 4.1, 2011: 6.8, 2012: 7.2, 2013: 2.1,
+    2014: 8.5, 2015: 1.2, 2016: 3.4, 2017: 0.8, 2018: 1.5,
+    2019: 5.8, 2020: 4.1, 2021: -3.2, 2022: -16.2, 2023: 6.4, 2024: 3.2
+  }
+};
 
 const ETFBondsCAGR = () => {
-  // Asset configurations
   const assets: AssetConfig[] = [
     { id: 'msci-world', name: 'MSCI World', color: '#3b82f6', defaultReturn: 8.5, minReturn: 5, maxReturn: 12 },
     { id: 'nasdaq', name: 'Nasdaq-100', color: '#10b981', defaultReturn: 13, minReturn: 8, maxReturn: 18 },
@@ -32,41 +57,13 @@ const ETFBondsCAGR = () => {
     { id: 'bonds-aaa', name: 'Bons AAA EUR', color: '#6b7280', defaultReturn: 2.5, minReturn: 1, maxReturn: 5 }
   ];
 
-  // Historical returns data (2004-2024) - Real data from indices
-  const historicalData: HistoricalDataPoint[] = [
-    { year: 2004, 'msci-world': 15.2, 'nasdaq': 8.6, 'sp500': 10.9, 'bonds-aaa': 7.3 },
-    { year: 2005, 'msci-world': 9.5, 'nasdaq': 1.4, 'sp500': 4.9, 'bonds-aaa': 3.4 },
-    { year: 2006, 'msci-world': 20.1, 'nasdaq': 9.5, 'sp500': 15.8, 'bonds-aaa': 1.2 },
-    { year: 2007, 'msci-world': 9.0, 'nasdaq': 19.2, 'sp500': 5.5, 'bonds-aaa': 2.8 },
-    { year: 2008, 'msci-world': -40.3, 'nasdaq': -41.9, 'sp500': -37.0, 'bonds-aaa': 8.5 },
-    { year: 2009, 'msci-world': 30.0, 'nasdaq': 43.9, 'sp500': 26.5, 'bonds-aaa': 5.2 },
-    { year: 2010, 'msci-world': 11.8, 'nasdaq': 19.2, 'sp500': 15.1, 'bonds-aaa': 4.1 },
-    { year: 2011, 'msci-world': -5.0, 'nasdaq': 2.7, 'sp500': 2.1, 'bonds-aaa': 6.8 },
-    { year: 2012, 'msci-world': 15.8, 'nasdaq': 17.5, 'sp500': 16.0, 'bonds-aaa': 7.2 },
-    { year: 2013, 'msci-world': 26.7, 'nasdaq': 38.3, 'sp500': 32.4, 'bonds-aaa': 2.1 },
-    { year: 2014, 'msci-world': 4.9, 'nasdaq': 19.2, 'sp500': 13.7, 'bonds-aaa': 8.5 },
-    { year: 2015, 'msci-world': -0.3, 'nasdaq': 9.7, 'sp500': 1.4, 'bonds-aaa': 1.2 },
-    { year: 2016, 'msci-world': 7.5, 'nasdaq': 7.5, 'sp500': 12.0, 'msci-screened': 7.2, 'bonds-aaa': 3.4 },
-    { year: 2017, 'msci-world': 22.4, 'nasdaq': 32.0, 'sp500': 21.8, 'msci-screened': 21.8, 'bonds-aaa': 0.8 },
-    { year: 2018, 'msci-world': -8.2, 'nasdaq': -0.1, 'sp500': -4.4, 'msci-screened': -8.5, 'bonds-aaa': 1.5 },
-    { year: 2019, 'msci-world': 27.7, 'nasdaq': 38.7, 'sp500': 31.5, 'msci-screened': 27.2, 'bonds-aaa': 5.8 },
-    { year: 2020, 'msci-world': 15.9, 'nasdaq': 47.6, 'sp500': 18.4, 'msci-screened': 15.4, 'bonds-aaa': 4.1 },
-    { year: 2021, 'msci-world': 21.8, 'nasdaq': 26.6, 'sp500': 28.7, 'msci-screened': 21.3, 'bonds-aaa': -3.2 },
-    { year: 2022, 'msci-world': -17.7, 'nasdaq': -32.5, 'sp500': -18.1, 'msci-screened': -18.1, 'bonds-aaa': -16.2 },
-    { year: 2023, 'msci-world': 23.8, 'nasdaq': 54.8, 'sp500': 26.3, 'msci-screened': 23.2, 'bonds-aaa': 6.4 },
-    { year: 2024, 'msci-world': 18.2, 'nasdaq': 28.6, 'sp500': 24.2, 'msci-screened': 17.8, 'bonds-aaa': 3.2 }
-  ];
-
   const [initialInvestment, setInitialInvestment] = useState(50000);
   const [yearsToHold, setYearsToHold] = useState(20);
   const [selectedAssets, setSelectedAssets] = useState<string[]>(['msci-world', 'sp500']);
   const [assetReturns, setAssetReturns] = useState<Record<string, number>>({
-    'msci-world': 8.5,
-    'nasdaq': 13,
-    'sp500': 10.5,
-    'msci-screened': 7.5,
-    'bonds-aaa': 2.5
+    'msci-world': 8.5, 'nasdaq': 13, 'sp500': 10.5, 'msci-screened': 7.5, 'bonds-aaa': 2.5
   });
+  const [investmentYear, setInvestmentYear] = useState(2010);
 
   const calculateMyInvestorCost = (amount: number): number => {
     const cost = amount * 0.0012;
@@ -84,14 +81,14 @@ const ETFBondsCAGR = () => {
       selectedAssets.forEach(assetId => {
         const annualReturn = assetReturns[assetId] / 100;
         const grossValue = netInitialInvestment * Math.pow(1 + annualReturn, year);
-        
+
         const sellingCost = calculateMyInvestorCost(grossValue);
         const capitalGain = grossValue - initialInvestment;
         const capitalGainsTax = capitalGain > 0 ? capitalGain * 0.25 : 0;
-        
+
         const netValue = grossValue - sellingCost - capitalGainsTax;
         const cagr = ((netValue / initialInvestment) ** (1 / year) - 1) * 100;
-        
+
         dataPoint[assetId] = cagr;
       });
 
@@ -100,6 +97,76 @@ const ETFBondsCAGR = () => {
 
     return yearlyData;
   };
+
+  const historicalYoYData = useMemo(() => {
+    const allYears = new Set<number>();
+    Object.values(historicalReturns).forEach(data => {
+      Object.keys(data).forEach(y => allYears.add(Number(y)));
+    });
+    const years = Array.from(allYears).sort((a, b) => a - b);
+
+    return years.map(year => {
+      const point: Record<string, number | undefined> = { year };
+      selectedAssets.forEach(assetId => {
+        const ret = historicalReturns[assetId]?.[year];
+        if (ret !== undefined) {
+          point[`${assetId}-yoy`] = ret;
+        }
+      });
+      return point;
+    });
+  }, [selectedAssets]);
+
+  const historicalCompoundData = useMemo(() => {
+    const allYears = new Set<number>();
+    Object.values(historicalReturns).forEach(data => {
+      Object.keys(data).forEach(y => allYears.add(Number(y)));
+    });
+    const years = Array.from(allYears).sort((a, b) => a - b);
+
+    const buyingCostPct = 0.0012;
+    const sellingCostPct = 0.0012;
+
+    return years.filter(y => y >= investmentYear).map(year => {
+      const point: Record<string, number | undefined> = { year };
+
+      if (year === investmentYear) {
+        selectedAssets.forEach(assetId => {
+          if (historicalReturns[assetId]?.[investmentYear] !== undefined) {
+            point[`${assetId}-cagr`] = 0;
+          }
+        });
+        return point;
+      }
+
+      selectedAssets.forEach(assetId => {
+        const assetData = historicalReturns[assetId];
+        if (!assetData || assetData[investmentYear] === undefined) return;
+
+        let cumulativeGrowth = 1;
+        let allDataAvailable = true;
+        for (let y = investmentYear; y < year; y++) {
+          const ret = assetData[y];
+          if (ret === undefined) { allDataAvailable = false; break; }
+          cumulativeGrowth *= (1 + ret / 100);
+        }
+        if (!allDataAvailable) return;
+
+        const netInitial = 1 * (1 - buyingCostPct);
+        const grossFinal = netInitial * cumulativeGrowth;
+        const capitalGain = grossFinal - 1;
+        const tax = capitalGain > 0 ? capitalGain * 0.25 : 0;
+        const sellingCost = grossFinal * sellingCostPct;
+        const netFinal = grossFinal - tax - sellingCost;
+
+        const elapsed = year - investmentYear;
+        const cagr = ((netFinal / 1) ** (1 / elapsed) - 1) * 100;
+        point[`${assetId}-cagr`] = cagr;
+      });
+
+      return point;
+    });
+  }, [selectedAssets, investmentYear]);
 
   const toggleAsset = (assetId: string) => {
     setSelectedAssets(prev =>
@@ -120,29 +187,13 @@ const ETFBondsCAGR = () => {
     <div className="w-full space-y-3">
       <div className="bg-slate-800 rounded-xl p-3">
         <h2 className="text-xl font-bold text-white mb-3">Calculadora ETFs i Bons</h2>
-        
+
         <div className="grid grid-cols-4 gap-2 text-xs mb-3">
           <div className="space-y-1">
             <label className="text-slate-300">Inversió: €{initialInvestment.toLocaleString()}</label>
-            <input
-              type="range"
-              min="10000"
-              max="500000"
-              step="5000"
-              value={initialInvestment}
-              onChange={(e) => setInitialInvestment(parseFloat(e.target.value))}
-              className="w-full h-1"
-            />
+            <input type="range" min="10000" max="500000" step="5000" value={initialInvestment} onChange={(e) => setInitialInvestment(parseFloat(e.target.value))} className="w-full h-1" />
             <label className="text-slate-300">Anys: {yearsToHold}</label>
-            <input
-              type="range"
-              min="1"
-              max="30"
-              step="1"
-              value={yearsToHold}
-              onChange={(e) => setYearsToHold(parseFloat(e.target.value))}
-              className="w-full h-1"
-            />
+            <input type="range" min="1" max="30" step="1" value={yearsToHold} onChange={(e) => setYearsToHold(parseFloat(e.target.value))} className="w-full h-1" />
             <div className="bg-blue-900/30 p-2 rounded mt-2">
               <div className="text-slate-400 text-[10px]">Cost MyInvestor</div>
               <div className="text-sm font-bold text-white">€{(buyingCost * 2).toFixed(2)}</div>
@@ -153,33 +204,16 @@ const ETFBondsCAGR = () => {
           {assets.slice(0, 3).map((asset) => (
             <div key={asset.id} className="space-y-1">
               <label className="flex items-center space-x-1">
-                <input
-                  type="checkbox"
-                  checked={selectedAssets.includes(asset.id)}
-                  onChange={() => toggleAsset(asset.id)}
-                  className="w-3 h-3"
-                />
-                <span className="text-slate-300 font-semibold" style={{ color: asset.color }}>
-                  {asset.name}
-                </span>
+                <input type="checkbox" checked={selectedAssets.includes(asset.id)} onChange={() => toggleAsset(asset.id)} className="w-3 h-3" />
+                <span className="font-semibold" style={{ color: asset.color }}>{asset.name}</span>
               </label>
               {selectedAssets.includes(asset.id) && (
                 <>
                   <label className="text-slate-300">Rentabilitat: {assetReturns[asset.id]}%</label>
-                  <input
-                    type="range"
-                    min={asset.minReturn}
-                    max={asset.maxReturn}
-                    step="0.5"
-                    value={assetReturns[asset.id]}
-                    onChange={(e) => setAssetReturns(prev => ({ ...prev, [asset.id]: parseFloat(e.target.value) }))}
-                    className="w-full h-1"
-                  />
+                  <input type="range" min={asset.minReturn} max={asset.maxReturn} step="0.5" value={assetReturns[asset.id]} onChange={(e) => setAssetReturns(prev => ({ ...prev, [asset.id]: parseFloat(e.target.value) }))} className="w-full h-1" />
                   <div className="bg-purple-900/30 p-2 rounded">
                     <div className="text-slate-400 text-[10px]">CAGR Any {yearsToHold}</div>
-                    <div className="text-sm font-bold text-white">
-                      {finalYear?.[asset.id]?.toFixed(2) || '0.00'}%
-                    </div>
+                    <div className="text-sm font-bold text-white">{finalYear?.[asset.id]?.toFixed(2) || '0.00'}%</div>
                   </div>
                 </>
               )}
@@ -191,33 +225,16 @@ const ETFBondsCAGR = () => {
           {assets.slice(3).map((asset) => (
             <div key={asset.id} className="space-y-1">
               <label className="flex items-center space-x-1">
-                <input
-                  type="checkbox"
-                  checked={selectedAssets.includes(asset.id)}
-                  onChange={() => toggleAsset(asset.id)}
-                  className="w-3 h-3"
-                />
-                <span className="text-slate-300 font-semibold" style={{ color: asset.color }}>
-                  {asset.name}
-                </span>
+                <input type="checkbox" checked={selectedAssets.includes(asset.id)} onChange={() => toggleAsset(asset.id)} className="w-3 h-3" />
+                <span className="font-semibold" style={{ color: asset.color }}>{asset.name}</span>
               </label>
               {selectedAssets.includes(asset.id) && (
                 <>
                   <label className="text-slate-300">Rentabilitat: {assetReturns[asset.id]}%</label>
-                  <input
-                    type="range"
-                    min={asset.minReturn}
-                    max={asset.maxReturn}
-                    step="0.5"
-                    value={assetReturns[asset.id]}
-                    onChange={(e) => setAssetReturns(prev => ({ ...prev, [asset.id]: parseFloat(e.target.value) }))}
-                    className="w-full h-1"
-                  />
+                  <input type="range" min={asset.minReturn} max={asset.maxReturn} step="0.5" value={assetReturns[asset.id]} onChange={(e) => setAssetReturns(prev => ({ ...prev, [asset.id]: parseFloat(e.target.value) }))} className="w-full h-1" />
                   <div className="bg-purple-900/30 p-2 rounded">
                     <div className="text-slate-400 text-[10px]">CAGR Any {yearsToHold}</div>
-                    <div className="text-sm font-bold text-white">
-                      {finalYear?.[asset.id]?.toFixed(2) || '0.00'}%
-                    </div>
+                    <div className="text-sm font-bold text-white">{finalYear?.[asset.id]?.toFixed(2) || '0.00'}%</div>
                   </div>
                 </>
               )}
@@ -227,39 +244,23 @@ const ETFBondsCAGR = () => {
       </div>
 
       <div className="bg-slate-800 rounded-xl p-3">
-        <h3 className="text-lg font-bold text-white mb-2">Comparativa CAGR</h3>
+        <h3 className="text-lg font-bold text-white mb-2">Comparativa CAGR (simulació)</h3>
         <ResponsiveContainer width="100%" height={350}>
           <LineChart data={yearlyData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
             <XAxis dataKey="year" stroke="#cbd5e1" />
-            <YAxis stroke="#cbd5e1" label={{ value: 'CAGR (%)', angle: -90, position: 'insideLeft' }} />
+            <YAxis stroke="#cbd5e1" />
             <Tooltip
               formatter={(value: number | undefined) => value !== undefined ? `${value.toFixed(2)}%` : ''}
               contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
             />
             <Legend />
-            {assets.map(asset => 
+            {assets.map(asset =>
               selectedAssets.includes(asset.id) && (
-                <Line
-                  key={asset.id}
-                  type="monotone"
-                  dataKey={asset.id}
-                  stroke={asset.color}
-                  strokeWidth={2}
-                  name={asset.name}
-                  dot={false}
-                />
+                <Line key={asset.id} type="monotone" dataKey={asset.id} stroke={asset.color} strokeWidth={2} name={asset.name} dot={false} />
               )
             )}
-            <Line
-              type="monotone"
-              dataKey={() => inflacionEspana}
-              stroke="#ef4444"
-              strokeWidth={1}
-              strokeDasharray="3 3"
-              name="Inflació 2.4%"
-              dot={false}
-            />
+            <Line type="monotone" dataKey={() => inflacionEspana} stroke="#ef4444" strokeWidth={1} strokeDasharray="3 3" name="Inflació 2.4%" dot={false} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -286,37 +287,56 @@ const ETFBondsCAGR = () => {
       </div>
 
       <div className="bg-slate-800 rounded-xl p-4">
-        <h3 className="text-xl font-bold text-white mb-3">Rentabilitats Històriques Reals (2004-2024)</h3>
+        <h3 className="text-xl font-bold text-white mb-3">Variació Interanual Històrica (2004-2024)</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={historicalData}>
+          <LineChart data={historicalYoYData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
             <XAxis dataKey="year" stroke="#cbd5e1" />
-            <YAxis stroke="#cbd5e1" label={{ value: 'Rentabilitat Anual (%)', angle: -90, position: 'insideLeft' }} />
+            <YAxis stroke="#cbd5e1" />
             <Tooltip
               formatter={(value: number | undefined) => value !== undefined ? `${value.toFixed(1)}%` : ''}
               contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
             />
             <Legend />
-            {assets.map(asset => {
-              const hasData = historicalData.some(d => d[asset.id] !== undefined);
-              return hasData && selectedAssets.includes(asset.id) && (
-                <Line
-                  key={`hist-${asset.id}`}
-                  type="monotone"
-                  dataKey={asset.id}
-                  stroke={asset.color}
-                  strokeWidth={2}
-                  name={asset.name}
-                  dot={false}
-                  connectNulls
-                />
-              );
-            })}
+            <ReferenceLine y={0} stroke="#475569" />
+            {assets.map(asset =>
+              selectedAssets.includes(asset.id) && (
+                <Line key={`yoy-${asset.id}`} type="monotone" dataKey={`${asset.id}-yoy`} stroke={asset.color} strokeWidth={2} name={`${asset.name} (YoY%)`} dot={false} connectNulls />
+              )
+            )}
           </LineChart>
         </ResponsiveContainer>
-        <div className="mt-3 p-3 bg-blue-900/30 rounded-lg border border-blue-500/30 text-xs text-slate-300">
-          <p><strong>Font de dades:</strong> Rentabilitats anuals reals dels índexs MSCI World, Nasdaq-100, S&P 500, MSCI World SRI i Bons EUR AAA.</p>
-          <p className="mt-1"><strong>Nota:</strong> Les rentabilitats passades no garanteixen rendiments futurs. La volatilitat és inherent als mercats financers.</p>
+      </div>
+
+      <div className="bg-slate-800 rounded-xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-xl font-bold text-white">CAGR Compost Real des de Any d&apos;Inversió</h3>
+          <div className="flex items-center gap-2 text-xs">
+            <label className="text-slate-300">Any inversió: {investmentYear}</label>
+            <input type="range" min="2004" max="2023" step="1" value={investmentYear} onChange={(e) => setInvestmentYear(parseInt(e.target.value))} className="w-32 h-1" />
+          </div>
+        </div>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={historicalCompoundData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
+            <XAxis dataKey="year" stroke="#cbd5e1" />
+            <YAxis stroke="#cbd5e1" />
+            <Tooltip
+              formatter={(value: number | undefined) => value !== undefined ? `${value.toFixed(2)}%` : ''}
+              contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #475569', borderRadius: '8px' }}
+            />
+            <Legend />
+            <ReferenceLine y={0} stroke="#475569" />
+            {assets.map(asset =>
+              selectedAssets.includes(asset.id) && (
+                <Line key={`cagr-${asset.id}`} type="monotone" dataKey={`${asset.id}-cagr`} stroke={asset.color} strokeWidth={2} name={`${asset.name} CAGR`} dot={false} connectNulls />
+              )
+            )}
+            <Line type="monotone" dataKey={() => inflacionEspana} stroke="#ef4444" strokeWidth={1} strokeDasharray="3 3" name="Inflació 2.4%" dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
+        <div className="mt-2 p-2 bg-blue-900/30 rounded-lg border border-blue-500/30 text-xs text-slate-300">
+          <p><strong>CAGR net:</strong> Descomptant costos MyInvestor (0.12% compra + 0.12% venda) i Impost de Societats (25% sobre guanys). Mostra la rendibilitat anual composta real si haguéssim invertit al {investmentYear}.</p>
         </div>
       </div>
 

@@ -10,7 +10,6 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 
@@ -83,23 +82,11 @@ export default function Home() {
                             </CardDescription>
                           </CardHeader>
                           <CardContent className="relative">
-                            <div className="space-y-4">
-                              <div className="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg">
-                                <span className="text-sm font-medium text-slate-400">Inversió:</span>
-                                <span className="text-xl font-bold text-white">{idea.investment}</span>
-                              </div>
-                              <div className="flex justify-between items-center p-3 bg-slate-900/50 rounded-lg">
-                                <span className="text-sm font-medium text-slate-400">Retorn anual:</span>
-                                <Badge variant="default" className="bg-gradient-to-r from-green-600 to-green-500 text-white text-base px-3 py-1">
-                                  {idea.annualReturn}
-                                </Badge>
-                              </div>
-                              <Link href={`/idea/${idea.id}`}>
-                                <Button className="w-full mt-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg">
-                                  Veure detalls
-                                </Button>
-                              </Link>
-                            </div>
+                            <Link href={`/idea/${idea.id}`}>
+                              <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg">
+                                Veure detalls
+                              </Button>
+                            </Link>
                           </CardContent>
                         </Card>
                       ))}
