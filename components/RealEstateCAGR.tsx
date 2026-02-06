@@ -33,6 +33,7 @@ const RealEstateCAGR = () => {
   const [gestoriaFee] = useState(450);
 
   const [yearsToHold, setYearsToHold] = useState(20);
+  const [hasAgencySale, setHasAgencySale] = useState(true);
   const [agentCommissionPct, setAgentCommissionPct] = useState(3);
 
   const [ibiRate, setIbiRate] = useState(0.4);
@@ -42,8 +43,6 @@ const RealEstateCAGR = () => {
 
   const [monthlyRent, setMonthlyRent] = useState(1000);
   const [isRented, setIsRented] = useState(true);
-  const [hasAgency, setHasAgency] = useState(false);
-  const [agencyRentalPct, setAgencyRentalPct] = useState(8);
 
   const [appreciationRate, setAppreciationRate] = useState(5);
 
@@ -89,7 +88,6 @@ const RealEstateCAGR = () => {
     const yearlyData: YearData[] = [];
 
     const annualRent = monthlyRent * 12;
-    const agencyFee = hasAgency ? annualRent * (agencyRentalPct / 100) : 0;
     const annualIBI = propertyPrice * (ibiRate / 100);
     const annualCommunity = communityFees * 12;
     const annualMaintenance = propertyPrice * (maintenancePct / 100);
@@ -100,7 +98,7 @@ const RealEstateCAGR = () => {
       const currentPropertyValue = propertyPrice * Math.pow(1 + appreciationRate / 100, year);
 
       const grossRentalIncome = isRented ? annualRent : 0;
-      const totalExpenses = annualIBI + insurance + annualMaintenance + annualCommunity + agencyFee;
+      const totalExpenses = annualIBI + insurance + annualMaintenance + annualCommunity;
 
       const netIncome = grossRentalIncome - totalExpenses;
       const taxOnIncome = netIncome > 0 ? netIncome * 0.25 : 0;
@@ -108,7 +106,7 @@ const RealEstateCAGR = () => {
 
       accumulatedCashFlow += netCashFlow;
 
-      const agentCommission = currentPropertyValue * (agentCommissionPct / 100);
+      const agentCommission = hasAgencySale ? currentPropertyValue * (agentCommissionPct / 100) : 0;
       const capitalGain = currentPropertyValue - propertyPrice;
       const capitalGainsTax = capitalGain > 0 ? capitalGain * 0.25 : 0;
       const notarySelling = currentPropertyValue * 0.003;
@@ -141,7 +139,7 @@ const RealEstateCAGR = () => {
   const historicalChartData = useMemo(() => {
     const years = Object.keys(historicalPriceM2).map(Number).sort((a, b) => a - b);
     const buyingCostsPct = propertyType === 'second-hand' ? 0.10 : 0.115;
-    const sellingCostsPct = (agentCommissionPct / 100) + 0.003 + 0.001;
+    const sellingCostsPct = (hasAgencySale ? agentCommissionPct / 100 : 0) + 0.003 + 0.001;
 
     return years.map((year, idx) => {
       const price = historicalPriceM2[year];
@@ -170,7 +168,7 @@ const RealEstateCAGR = () => {
         compoundCagr
       };
     });
-  }, [purchaseYear, propertyType, agentCommissionPct]);
+  }, [purchaseYear, propertyType, agentCommissionPct, hasAgencySale]);
 
   const buyingCosts = calculateBuyingCosts();
   const yearlyData = calculateYearlyData();
@@ -230,11 +228,6 @@ const RealEstateCAGR = () => {
               <>
                 <label className="text-slate-300">Lloguer: €{monthlyRent}/mes</label>
                 <input type="range" min="500" max="3000" step="50" value={monthlyRent} onChange={(e) => setMonthlyRent(parseFloat(e.target.value))} className="w-full h-1" />
-                <label className="flex items-center space-x-1">
-                  <input type="checkbox" checked={hasAgency} onChange={(e) => setHasAgency(e.target.checked)} className="w-3 h-3" />
-                  <span className="text-slate-300">Immobiliària {agencyRentalPct}%</span>
-                </label>
-                {hasAgency && <input type="range" min="5" max="12" step="0.5" value={agencyRentalPct} onChange={(e) => setAgencyRentalPct(parseFloat(e.target.value))} className="w-full h-1" />}
               </>
             )}
           </div>
@@ -242,8 +235,11 @@ const RealEstateCAGR = () => {
           <div className="space-y-1">
             <label className="text-slate-300">Anys: {yearsToHold}</label>
             <input type="range" min="1" max="30" step="1" value={yearsToHold} onChange={(e) => setYearsToHold(parseFloat(e.target.value))} className="w-full h-1" />
-            <label className="text-slate-300">Comissió venda: {agentCommissionPct}%</label>
-            <input type="range" min="0" max="5" step="0.5" value={agentCommissionPct} onChange={(e) => setAgentCommissionPct(parseFloat(e.target.value))} className="w-full h-1" />
+            <label className="flex items-center space-x-1">
+              <input type="checkbox" checked={hasAgencySale} onChange={(e) => setHasAgencySale(e.target.checked)} className="w-3 h-3" />
+              <span className="text-slate-300">Immobiliària venda {hasAgencySale ? `${agentCommissionPct}%` : ''}</span>
+            </label>
+            {hasAgencySale && <input type="range" min="1" max="5" step="0.5" value={agentCommissionPct} onChange={(e) => setAgentCommissionPct(parseFloat(e.target.value))} className="w-full h-1" />}
             <label className="text-slate-300">Revalorització: {appreciationRate}%</label>
             <input type="range" min="2" max="9" step="0.5" value={appreciationRate} onChange={(e) => setAppreciationRate(parseFloat(e.target.value))} className="w-full h-1" />
             <div className="bg-purple-900/30 p-2 rounded mt-2">
@@ -373,7 +369,8 @@ const RealEstateCAGR = () => {
         </ResponsiveContainer>
         <div className="mt-2 p-2 bg-blue-900/30 rounded-lg border border-blue-500/30 text-xs text-slate-300">
           <p><strong>Font:</strong> Ministerio de Transportes / INE - Preu mitjà €/m² habitatge construït a Espanya.</p>
-          <p className="mt-1"><strong>Línia taronja:</strong> Variació interanual del preu/m². <strong>Línia verda:</strong> CAGR compost net (descomptant costos compra {propertyType === 'second-hand' ? '10% ITP' : '11.5% IVA+AJD'}, venda {agentCommissionPct}% comissió + 25% IS sobre guanys) si haguéssim comprat al {purchaseYear}.</p>
+          <p className="mt-1"><strong>Línia taronja:</strong> Variació interanual del preu/m². <strong>Línia verda:</strong> CAGR net (descomptant costos compra {propertyType === 'second-hand' ? '10% ITP' : '11.5% IVA+AJD'}, venda {hasAgencySale ? `${agentCommissionPct}%` : '0%'} comissió + notari/registre + 25% IS sobre guanys) si haguéssim comprat al {purchaseYear}.</p>
+          <p className="mt-1"><strong>Atenció:</strong> Aquesta gràfica mostra NOMÉS la revalorització del preu/m², sense incloure ingressos de lloguer. La rendibilitat real d&apos;un immoble llogat seria significativament superior.</p>
         </div>
       </div>
 
@@ -417,7 +414,7 @@ const RealEstateCAGR = () => {
             <li>La inversió inicial total (preu + tots els impostos i despeses de compra)</li>
             <li>El valor actual de la propietat (amb revalorització del {appreciationRate}% anual)</li>
             <li>Tots els fluxos de caixa nets acumulats (lloguers - despeses - impostos)</li>
-            {hasAgency && <li>Comissió immobiliària de gestió de lloguer ({agencyRentalPct}% dels ingressos)</li>}
+            {hasAgencySale && <li>Comissió immobiliària de venda ({agentCommissionPct}%)</li>}
           </ul>
           <p className="mt-2"><strong>Fórmula:</strong> CAGR = ((Riquesa Final / Inversió Inicial)^(1/anys) - 1) × 100</p>
         </div>
