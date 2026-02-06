@@ -47,6 +47,8 @@ const RealEstateCAGR = () => {
   const [appreciationRate, setAppreciationRate] = useState(5);
 
   const [purchaseYear, setPurchaseYear] = useState(2015);
+  const [historicalRentalYield, setHistoricalRentalYield] = useState(4.0);
+  const [historicalIsRented, setHistoricalIsRented] = useState(true);
 
   const calculateBuyingCosts = () => {
     let itp = 0;
@@ -140,6 +142,7 @@ const RealEstateCAGR = () => {
     const years = Object.keys(historicalPriceM2).map(Number).sort((a, b) => a - b);
     const buyingCostsPct = propertyType === 'second-hand' ? 0.10 : 0.115;
     const sellingCostsPct = (hasAgencySale ? agentCommissionPct / 100 : 0) + 0.003 + 0.001;
+    const expenseRatioPct = 0.02;
 
     return years.map((year, idx) => {
       const price = historicalPriceM2[year];
@@ -150,12 +153,28 @@ const RealEstateCAGR = () => {
         const purchasePrice = historicalPriceM2[purchaseYear];
         const totalInitial = purchasePrice * (1 + buyingCostsPct);
         const elapsed = year - purchaseYear;
-        const grossValue = price;
-        const capitalGain = grossValue - purchasePrice;
+
+        let accumulatedNetRental = 0;
+        if (historicalIsRented) {
+          for (let y = purchaseYear + 1; y <= year; y++) {
+            const priceAtY = historicalPriceM2[y] || price;
+            const grossRental = priceAtY * (historicalRentalYield / 100);
+            const expenses = priceAtY * expenseRatioPct;
+            const netIncome = grossRental - expenses;
+            const taxOnIncome = netIncome > 0 ? netIncome * 0.25 : 0;
+            accumulatedNetRental += netIncome - taxOnIncome;
+          }
+        }
+
+        const capitalGain = price - purchasePrice;
         const capitalGainsTax = capitalGain > 0 ? capitalGain * 0.25 : 0;
-        const sellingCosts = grossValue * sellingCostsPct;
-        const netValue = grossValue - capitalGainsTax - sellingCosts;
-        compoundCagr = ((netValue / totalInitial) ** (1 / elapsed) - 1) * 100;
+        const sellingCosts = price * sellingCostsPct;
+        const netPropertyValue = price - capitalGainsTax - sellingCosts;
+        const totalFinalValue = netPropertyValue + accumulatedNetRental;
+
+        compoundCagr = totalFinalValue > 0
+          ? ((totalFinalValue / totalInitial) ** (1 / elapsed) - 1) * 100
+          : -100;
       }
       if (year === purchaseYear) {
         compoundCagr = 0;
@@ -168,7 +187,7 @@ const RealEstateCAGR = () => {
         compoundCagr
       };
     });
-  }, [purchaseYear, propertyType, agentCommissionPct, hasAgencySale]);
+  }, [purchaseYear, propertyType, agentCommissionPct, hasAgencySale, historicalRentalYield, historicalIsRented]);
 
   const buyingCosts = calculateBuyingCosts();
   const yearlyData = calculateYearlyData();
@@ -341,11 +360,23 @@ const RealEstateCAGR = () => {
       </div>
 
       <div className="bg-slate-800 rounded-xl p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xl font-bold text-white">Històric Preu/m² Espanya (2000-2024)</h3>
-          <div className="flex items-center gap-2 text-xs">
-            <label className="text-slate-300">Any compra: {purchaseYear}</label>
-            <input type="range" min="2000" max="2023" step="1" value={purchaseYear} onChange={(e) => setPurchaseYear(parseInt(e.target.value))} className="w-32 h-1" />
+        <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <h3 className="text-xl font-bold text-white">Històric Retorn Total Vivenda Espanya (2000-2024)</h3>
+          <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-2">
+              <label className="text-slate-300">Any compra: {purchaseYear}</label>
+              <input type="range" min="2000" max="2023" step="1" value={purchaseYear} onChange={(e) => setPurchaseYear(parseInt(e.target.value))} className="w-24 h-1" />
+            </div>
+            <label className="flex items-center space-x-1">
+              <input type="checkbox" checked={historicalIsRented} onChange={(e) => setHistoricalIsRented(e.target.checked)} className="w-3 h-3" />
+              <span className="text-slate-300">Lloguer</span>
+            </label>
+            {historicalIsRented && (
+              <div className="flex items-center gap-2">
+                <label className="text-slate-300">Yield: {historicalRentalYield}%</label>
+                <input type="range" min="2" max="7" step="0.5" value={historicalRentalYield} onChange={(e) => setHistoricalRentalYield(parseFloat(e.target.value))} className="w-20 h-1" />
+              </div>
+            )}
           </div>
         </div>
         <ResponsiveContainer width="100%" height={350}>
@@ -369,8 +400,7 @@ const RealEstateCAGR = () => {
         </ResponsiveContainer>
         <div className="mt-2 p-2 bg-blue-900/30 rounded-lg border border-blue-500/30 text-xs text-slate-300">
           <p><strong>Font:</strong> Ministerio de Transportes / INE - Preu mitjà €/m² habitatge construït a Espanya.</p>
-          <p className="mt-1"><strong>Línia taronja:</strong> Variació interanual del preu/m². <strong>Línia verda:</strong> CAGR net (descomptant costos compra {propertyType === 'second-hand' ? '10% ITP' : '11.5% IVA+AJD'}, venda {hasAgencySale ? `${agentCommissionPct}%` : '0%'} comissió + notari/registre + 25% IS sobre guanys) si haguéssim comprat al {purchaseYear}.</p>
-          <p className="mt-1"><strong>Atenció:</strong> Aquesta gràfica mostra NOMÉS la revalorització del preu/m², sense incloure ingressos de lloguer. La rendibilitat real d&apos;un immoble llogat seria significativament superior.</p>
+          <p className="mt-1"><strong>Línia taronja:</strong> Variació interanual del preu/m². <strong>Línia verda:</strong> CAGR net (retorn total anualitzat){historicalIsRented ? `, incloent lloguer brut ${historicalRentalYield}% - ~2% despeses, net d'IS 25%` : ' sense lloguer'}. Descompta costos compra ({propertyType === 'second-hand' ? '10% ITP' : '11.5% IVA+AJD'}), venda ({hasAgencySale ? `${agentCommissionPct}%` : '0%'} comissió + notari/registre) i 25% IS sobre plusvàlua.</p>
         </div>
       </div>
 
