@@ -14,11 +14,21 @@ interface YearData {
 }
 
 const historicalPriceM2: Record<number, number> = {
-  2000: 1335, 2001: 1453, 2002: 1667, 2003: 1931, 2004: 2286,
-  2005: 2516, 2006: 2763, 2007: 2905, 2008: 2712, 2009: 2558,
-  2010: 2476, 2011: 2376, 2012: 2212, 2013: 2043, 2014: 1943,
-  2015: 1966, 2016: 2013, 2017: 2074, 2018: 2157, 2019: 2264,
-  2020: 2282, 2021: 2343, 2022: 2543, 2023: 2682, 2024: 2860
+  1995: 601, 1996: 614, 1997: 637, 1998: 700, 1999: 795,
+  2000: 906, 2001: 1050, 2002: 1220, 2003: 1430, 2004: 1650,
+  2005: 1824, 2006: 1990, 2007: 2085, 2008: 2018, 2009: 1892,
+  2010: 1825, 2011: 1701, 2012: 1531, 2013: 1466, 2014: 1456,
+  2015: 1490, 2016: 1512, 2017: 1558, 2018: 1618, 2019: 1651,
+  2020: 1641, 2021: 1687, 2022: 1815, 2023: 1921, 2024: 2094
+};
+
+const historicalInflation: Record<number, number> = {
+  1995: 4.7, 1996: 3.6, 1997: 2.0, 1998: 1.8, 1999: 2.3,
+  2000: 3.4, 2001: 3.6, 2002: 3.5, 2003: 3.0, 2004: 3.0,
+  2005: 3.4, 2006: 3.5, 2007: 2.8, 2008: 4.1, 2009: -0.3,
+  2010: 1.8, 2011: 3.2, 2012: 2.4, 2013: 1.4, 2014: -0.2,
+  2015: -0.5, 2016: -0.2, 2017: 2.0, 2018: 1.7, 2019: 0.7,
+  2020: -0.3, 2021: 3.1, 2022: 8.4, 2023: 3.5, 2024: 2.8
 };
 
 const RealEstateCAGR = () => {
@@ -149,6 +159,7 @@ const RealEstateCAGR = () => {
       const yoy = idx > 0 ? ((price - historicalPriceM2[years[idx - 1]]) / historicalPriceM2[years[idx - 1]]) * 100 : 0;
 
       let compoundCagr: number | undefined = undefined;
+      let finalValuePerM2: number | undefined = undefined;
       if (year > purchaseYear && historicalPriceM2[purchaseYear]) {
         const purchasePrice = historicalPriceM2[purchaseYear];
         const totalInitial = purchasePrice * (1 + buyingCostsPct);
@@ -171,6 +182,7 @@ const RealEstateCAGR = () => {
         const sellingCosts = price * sellingCostsPct;
         const netPropertyValue = price - capitalGainsTax - sellingCosts;
         const totalFinalValue = netPropertyValue + accumulatedNetRental;
+        finalValuePerM2 = totalFinalValue;
 
         compoundCagr = totalFinalValue > 0
           ? ((totalFinalValue / totalInitial) ** (1 / elapsed) - 1) * 100
@@ -178,22 +190,55 @@ const RealEstateCAGR = () => {
       }
       if (year === purchaseYear) {
         compoundCagr = 0;
+        finalValuePerM2 = historicalPriceM2[purchaseYear];
       }
 
       return {
         year,
         price,
         yoy: idx === 0 ? undefined : yoy,
-        compoundCagr
+        compoundCagr,
+        finalValuePerM2
       };
     });
   }, [purchaseYear, propertyType, agentCommissionPct, hasAgencySale, historicalRentalYield, historicalIsRented]);
+
+  const historicalAverages = useMemo(() => {
+    const years = Object.keys(historicalPriceM2).map(Number).sort((a, b) => a - b);
+    const periodYears = years.filter(y => y > purchaseYear);
+    if (periodYears.length === 0) return { avgInflation: 0, avgAppreciation: 0 };
+
+    let sumInflation = 0;
+    let countInflation = 0;
+    for (const y of periodYears) {
+      if (historicalInflation[y] !== undefined) {
+        sumInflation += historicalInflation[y];
+        countInflation++;
+      }
+    }
+
+    let sumAppreciation = 0;
+    let countAppreciation = 0;
+    for (const y of periodYears) {
+      const prev = y - 1;
+      if (historicalPriceM2[prev] && historicalPriceM2[y]) {
+        sumAppreciation += ((historicalPriceM2[y] - historicalPriceM2[prev]) / historicalPriceM2[prev]) * 100;
+        countAppreciation++;
+      }
+    }
+
+    return {
+      avgInflation: countInflation > 0 ? sumInflation / countInflation : 0,
+      avgAppreciation: countAppreciation > 0 ? sumAppreciation / countAppreciation : 0
+    };
+  }, [purchaseYear]);
 
   const buyingCosts = calculateBuyingCosts();
   const yearlyData = calculateYearlyData();
 
   const finalYear = yearlyData[yearlyData.length - 1];
-  const inflacionEspana = 2.4;
+
+  const lastHistorical = historicalChartData[historicalChartData.length - 1];
 
   return (
     <div className="w-full space-y-3">
@@ -281,7 +326,7 @@ const RealEstateCAGR = () => {
             />
             <Legend />
             <Line type="monotone" dataKey="cagr" stroke="#3b82f6" strokeWidth={2} name="CAGR" dot={false} />
-            <Line type="monotone" dataKey={() => inflacionEspana} stroke="#ef4444" strokeWidth={1} strokeDasharray="3 3" name="Inflació 2.4%" dot={false} />
+            <ReferenceLine y={historicalAverages.avgInflation} stroke="#ef4444" strokeDasharray="5 5" label={{ value: `Inflació ${historicalAverages.avgInflation.toFixed(1)}%`, fill: '#ef4444', fontSize: 10, position: 'right' }} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -361,11 +406,11 @@ const RealEstateCAGR = () => {
 
       <div className="bg-slate-800 rounded-xl p-4">
         <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h3 className="text-xl font-bold text-white">Històric Retorn Total Vivenda Espanya (2000-2024)</h3>
+          <h3 className="text-xl font-bold text-white">Històric Retorn Total Vivenda Espanya (1995-2024)</h3>
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-2">
               <label className="text-slate-300">Any compra: {purchaseYear}</label>
-              <input type="range" min="2000" max="2023" step="1" value={purchaseYear} onChange={(e) => setPurchaseYear(parseInt(e.target.value))} className="w-24 h-1" />
+              <input type="range" min="1995" max="2023" step="1" value={purchaseYear} onChange={(e) => setPurchaseYear(parseInt(e.target.value))} className="w-24 h-1" />
             </div>
             <label className="flex items-center space-x-1">
               <input type="checkbox" checked={historicalIsRented} onChange={(e) => setHistoricalIsRented(e.target.checked)} className="w-3 h-3" />
@@ -394,12 +439,35 @@ const RealEstateCAGR = () => {
             />
             <Legend />
             <ReferenceLine y={0} stroke="#475569" />
+            <ReferenceLine y={historicalAverages.avgInflation} stroke="#ef4444" strokeDasharray="5 5" label={{ value: `Inflació mitjana ${historicalAverages.avgInflation.toFixed(1)}%`, fill: '#ef4444', fontSize: 10, position: 'insideTopRight' }} />
+            <ReferenceLine y={historicalAverages.avgAppreciation} stroke="#60a5fa" strokeDasharray="5 5" label={{ value: `Revalorització mitjana ${historicalAverages.avgAppreciation.toFixed(1)}%`, fill: '#60a5fa', fontSize: 10, position: 'insideBottomRight' }} />
             <Line type="monotone" dataKey="yoy" stroke="#f97316" strokeWidth={2} name="Variació anual %" dot={false} connectNulls />
             <Line type="monotone" dataKey="compoundCagr" stroke="#10b981" strokeWidth={2} name={`CAGR des de ${purchaseYear}`} dot={false} connectNulls />
           </LineChart>
         </ResponsiveContainer>
+        {lastHistorical?.compoundCagr !== undefined && (
+          <div className="mt-3 grid grid-cols-3 gap-3 text-sm">
+            <div className="bg-green-900/30 p-3 rounded-lg">
+              <div className="text-slate-300">CAGR al 2024</div>
+              <div className="text-xl font-bold text-white">{lastHistorical.compoundCagr.toFixed(2)}%</div>
+              <div className="text-xs text-slate-400">Des de {purchaseYear} ({2024 - purchaseYear} anys)</div>
+            </div>
+            <div className="bg-blue-900/30 p-3 rounded-lg">
+              <div className="text-slate-300">Valor final net per m²</div>
+              <div className="text-xl font-bold text-white">€{lastHistorical.finalValuePerM2?.toFixed(0)}</div>
+              <div className="text-xs text-slate-400">Inicial: €{historicalPriceM2[purchaseYear]} × {(1 + (propertyType === 'second-hand' ? 0.10 : 0.115)).toFixed(3)} = €{(historicalPriceM2[purchaseYear] * (1 + (propertyType === 'second-hand' ? 0.10 : 0.115))).toFixed(0)}</div>
+            </div>
+            <div className="bg-purple-900/30 p-3 rounded-lg">
+              <div className="text-slate-300">Guany net per m²</div>
+              <div className={`text-xl font-bold ${(lastHistorical.finalValuePerM2 || 0) - historicalPriceM2[purchaseYear] * (1 + (propertyType === 'second-hand' ? 0.10 : 0.115)) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                €{((lastHistorical.finalValuePerM2 || 0) - historicalPriceM2[purchaseYear] * (1 + (propertyType === 'second-hand' ? 0.10 : 0.115))).toFixed(0)}
+              </div>
+              <div className="text-xs text-slate-400">Valor final - inversió total</div>
+            </div>
+          </div>
+        )}
         <div className="mt-2 p-2 bg-blue-900/30 rounded-lg border border-blue-500/30 text-xs text-slate-300">
-          <p><strong>Font:</strong> Ministerio de Transportes / INE - Preu mitjà €/m² habitatge construït a Espanya.</p>
+          <p><strong>Font:</strong> Ministerio de Transportes - Valor tasado de vivienda libre (€/m²). Inflació: INE (IPC).</p>
           <p className="mt-1"><strong>Línia taronja:</strong> Variació interanual del preu/m². <strong>Línia verda:</strong> CAGR net (retorn total anualitzat){historicalIsRented ? `, incloent lloguer brut ${historicalRentalYield}% - ~2% despeses, net d'IS 25%` : ' sense lloguer'}. Descompta costos compra ({propertyType === 'second-hand' ? '10% ITP' : '11.5% IVA+AJD'}), venda ({hasAgencySale ? `${agentCommissionPct}%` : '0%'} comissió + notari/registre) i 25% IS sobre plusvàlua.</p>
         </div>
       </div>

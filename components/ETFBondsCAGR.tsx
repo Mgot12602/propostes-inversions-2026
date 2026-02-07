@@ -48,6 +48,13 @@ const historicalReturns: Record<string, Record<number, number>> = {
   }
 };
 
+const historicalInflation: Record<number, number> = {
+  2004: 3.0, 2005: 3.4, 2006: 3.5, 2007: 2.8, 2008: 4.1,
+  2009: -0.3, 2010: 1.8, 2011: 3.2, 2012: 2.4, 2013: 1.4,
+  2014: -0.2, 2015: -0.5, 2016: -0.2, 2017: 2.0, 2018: 1.7,
+  2019: 0.7, 2020: -0.3, 2021: 3.1, 2022: 8.4, 2023: 3.5, 2024: 2.8
+};
+
 const ETFBondsCAGR = () => {
   const assets: AssetConfig[] = [
     { id: 'msci-world', name: 'MSCI World', color: '#3b82f6', defaultReturn: 8.5, minReturn: 5, maxReturn: 12 },
@@ -176,9 +183,44 @@ const ETFBondsCAGR = () => {
     );
   };
 
+  const etfHistoricalAverages = useMemo(() => {
+    const periodYears = Object.keys(historicalInflation).map(Number).filter(y => y > investmentYear && y <= 2024);
+    if (periodYears.length === 0) return { avgInflation: 0, avgReturns: {} as Record<string, number> };
+
+    let sumInflation = 0;
+    let countInflation = 0;
+    for (const y of periodYears) {
+      if (historicalInflation[y] !== undefined) {
+        sumInflation += historicalInflation[y];
+        countInflation++;
+      }
+    }
+
+    const avgReturns: Record<string, number> = {};
+    selectedAssets.forEach(assetId => {
+      const data = historicalReturns[assetId];
+      if (!data) return;
+      let sum = 0;
+      let count = 0;
+      for (const y of periodYears) {
+        if (data[y] !== undefined) {
+          sum += data[y];
+          count++;
+        }
+      }
+      if (count > 0) avgReturns[assetId] = sum / count;
+    });
+
+    return {
+      avgInflation: countInflation > 0 ? sumInflation / countInflation : 0,
+      avgReturns
+    };
+  }, [investmentYear, selectedAssets]);
+
+  const lastCompoundData = historicalCompoundData[historicalCompoundData.length - 1];
+
   const yearlyData = calculateYearlyData();
   const finalYear = yearlyData[yearlyData.length - 1];
-  const inflacionEspana = 2.4;
 
   const buyingCost = calculateMyInvestorCost(initialInvestment);
   const netInitial = initialInvestment - buyingCost;
@@ -260,7 +302,7 @@ const ETFBondsCAGR = () => {
                 <Line key={asset.id} type="monotone" dataKey={asset.id} stroke={asset.color} strokeWidth={2} name={asset.name} dot={false} />
               )
             )}
-            <Line type="monotone" dataKey={() => inflacionEspana} stroke="#ef4444" strokeWidth={1} strokeDasharray="3 3" name="Inflació 2.4%" dot={false} />
+            <ReferenceLine y={etfHistoricalAverages.avgInflation} stroke="#ef4444" strokeDasharray="5 5" label={{ value: `Inflació ${etfHistoricalAverages.avgInflation.toFixed(1)}%`, fill: '#ef4444', fontSize: 10, position: 'right' }} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -299,6 +341,7 @@ const ETFBondsCAGR = () => {
             />
             <Legend />
             <ReferenceLine y={0} stroke="#475569" />
+            <ReferenceLine y={etfHistoricalAverages.avgInflation} stroke="#ef4444" strokeDasharray="5 5" label={{ value: `Inflació ${etfHistoricalAverages.avgInflation.toFixed(1)}%`, fill: '#ef4444', fontSize: 10, position: 'insideTopRight' }} />
             {assets.map(asset =>
               selectedAssets.includes(asset.id) && (
                 <Line key={`yoy-${asset.id}`} type="monotone" dataKey={`${asset.id}-yoy`} stroke={asset.color} strokeWidth={2} name={`${asset.name} (YoY%)`} dot={false} connectNulls />
@@ -327,16 +370,34 @@ const ETFBondsCAGR = () => {
             />
             <Legend />
             <ReferenceLine y={0} stroke="#475569" />
+            <ReferenceLine y={etfHistoricalAverages.avgInflation} stroke="#ef4444" strokeDasharray="5 5" label={{ value: `Inflació ${etfHistoricalAverages.avgInflation.toFixed(1)}%`, fill: '#ef4444', fontSize: 10, position: 'insideTopRight' }} />
             {assets.map(asset =>
               selectedAssets.includes(asset.id) && (
                 <Line key={`cagr-${asset.id}`} type="monotone" dataKey={`${asset.id}-cagr`} stroke={asset.color} strokeWidth={2} name={`${asset.name} CAGR`} dot={false} connectNulls />
               )
             )}
-            <Line type="monotone" dataKey={() => inflacionEspana} stroke="#ef4444" strokeWidth={1} strokeDasharray="3 3" name="Inflació 2.4%" dot={false} />
           </LineChart>
         </ResponsiveContainer>
+        {lastCompoundData && (
+          <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+            {selectedAssets.map(assetId => {
+              const asset = assets.find(a => a.id === assetId);
+              const cagr = lastCompoundData[`${assetId}-cagr`] as number | undefined;
+              if (!asset || cagr === undefined) return null;
+              const elapsed = 2024 - investmentYear;
+              const finalValue = initialInvestment * Math.pow(1 + cagr / 100, elapsed);
+              return (
+                <div key={`final-${assetId}`} className="p-3 rounded-lg" style={{ backgroundColor: `${asset.color}15`, borderLeft: `3px solid ${asset.color}` }}>
+                  <div className="text-slate-300 text-xs">{asset.name} ({investmentYear}-2024)</div>
+                  <div className="text-lg font-bold text-white">CAGR: {cagr.toFixed(2)}%</div>
+                  <div className="text-sm text-slate-300">€{initialInvestment.toLocaleString()} → €{Math.round(finalValue).toLocaleString()}</div>
+                </div>
+              );
+            })}
+          </div>
+        )}
         <div className="mt-2 p-2 bg-blue-900/30 rounded-lg border border-blue-500/30 text-xs text-slate-300">
-          <p><strong>CAGR net:</strong> Descomptant costos MyInvestor (0.12% compra + 0.12% venda) i Impost de Societats (25% sobre guanys). Mostra la rendibilitat anual composta real si haguéssim invertit al {investmentYear}.</p>
+          <p><strong>CAGR net:</strong> Descomptant costos MyInvestor (0.12% compra + 0.12% venda) i Impost de Societats (25% sobre guanys). Mostra la rendibilitat anual composta real si haguéssim invertit al {investmentYear}. Font inflació: INE (IPC).</p>
         </div>
       </div>
 
