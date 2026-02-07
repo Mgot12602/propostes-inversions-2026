@@ -66,7 +66,7 @@ const ETFBondsCAGR = () => {
 
   const [initialInvestment, setInitialInvestment] = useState(50000);
   const [yearsToHold, setYearsToHold] = useState(20);
-  const [selectedAssets, setSelectedAssets] = useState<string[]>(['msci-world', 'sp500']);
+  const [selectedAssets, setSelectedAssets] = useState<string[]>(['msci-world', 'nasdaq', 'sp500', 'msci-screened', 'bonds-aaa']);
   const [assetReturns, setAssetReturns] = useState<Record<string, number>>({
     'msci-world': 8.5, 'nasdaq': 13, 'sp500': 10.5, 'msci-screened': 7.5, 'bonds-aaa': 2.5
   });
@@ -175,6 +175,17 @@ const ETFBondsCAGR = () => {
     });
   }, [selectedAssets, investmentYear]);
 
+  const fullPeriodAvgReturns = useMemo(() => {
+    const result: Record<string, { avg: number; from: number; to: number }> = {};
+    Object.entries(historicalReturns).forEach(([assetId, data]) => {
+      const years = Object.keys(data).map(Number).sort((a, b) => a - b);
+      if (years.length === 0) return;
+      const sum = years.reduce((acc, y) => acc + data[y], 0);
+      result[assetId] = { avg: sum / years.length, from: years[0], to: years[years.length - 1] };
+    });
+    return result;
+  }, []);
+
   const toggleAsset = (assetId: string) => {
     setSelectedAssets(prev =>
       prev.includes(assetId)
@@ -223,65 +234,52 @@ const ETFBondsCAGR = () => {
   const finalYear = yearlyData[yearlyData.length - 1];
 
   const buyingCost = calculateMyInvestorCost(initialInvestment);
-  const netInitial = initialInvestment - buyingCost;
 
   return (
     <div className="w-full space-y-3">
       <div className="bg-slate-800 rounded-xl p-3">
         <h2 className="text-xl font-bold text-white mb-3">Calculadora ETFs i Bons</h2>
 
-        <div className="grid grid-cols-4 gap-2 text-xs mb-3">
-          <div className="space-y-1">
+        <div className="grid grid-cols-2 gap-3 text-xs mb-3">
+          <div className="space-y-2">
             <label className="text-slate-300">Inversió: €{initialInvestment.toLocaleString()}</label>
             <input type="range" min="10000" max="500000" step="5000" value={initialInvestment} onChange={(e) => setInitialInvestment(parseFloat(e.target.value))} className="w-full h-1" />
             <label className="text-slate-300">Anys: {yearsToHold}</label>
             <input type="range" min="1" max="30" step="1" value={yearsToHold} onChange={(e) => setYearsToHold(parseFloat(e.target.value))} className="w-full h-1" />
-            <div className="bg-blue-900/30 p-2 rounded mt-2">
-              <div className="text-slate-400 text-[10px]">Cost MyInvestor</div>
+            <div className="bg-blue-900/30 p-2 rounded mt-1">
+              <div className="text-slate-400 text-[10px]">Cost MyInvestor (compra + venda)</div>
               <div className="text-sm font-bold text-white">€{(buyingCost * 2).toFixed(2)}</div>
-              <div className="text-[10px] text-slate-400">Compra + Venda</div>
+            </div>
+            <div className="bg-amber-900/30 p-2 rounded">
+              <div className="text-slate-400 text-[10px]">IS 25% sobre plusvàlua</div>
+              <div className="text-[10px] text-slate-300">Només es paga sobre el guany (preu venda - preu compra). No sobre el total.</div>
             </div>
           </div>
 
-          {assets.slice(0, 3).map((asset) => (
-            <div key={asset.id} className="space-y-1">
-              <label className="flex items-center space-x-1">
-                <input type="checkbox" checked={selectedAssets.includes(asset.id)} onChange={() => toggleAsset(asset.id)} className="w-3 h-3" />
-                <span className="font-semibold" style={{ color: asset.color }}>{asset.name}</span>
-              </label>
-              {selectedAssets.includes(asset.id) && (
-                <>
-                  <label className="text-slate-300">Rentabilitat: {assetReturns[asset.id]}%</label>
-                  <input type="range" min={asset.minReturn} max={asset.maxReturn} step="0.5" value={assetReturns[asset.id]} onChange={(e) => setAssetReturns(prev => ({ ...prev, [asset.id]: parseFloat(e.target.value) }))} className="w-full h-1" />
-                  <div className="bg-purple-900/30 p-2 rounded">
-                    <div className="text-slate-400 text-[10px]">CAGR Any {yearsToHold}</div>
-                    <div className="text-sm font-bold text-white">{finalYear?.[asset.id]?.toFixed(2) || '0.00'}%</div>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          {assets.slice(3).map((asset) => (
-            <div key={asset.id} className="space-y-1">
-              <label className="flex items-center space-x-1">
-                <input type="checkbox" checked={selectedAssets.includes(asset.id)} onChange={() => toggleAsset(asset.id)} className="w-3 h-3" />
-                <span className="font-semibold" style={{ color: asset.color }}>{asset.name}</span>
-              </label>
-              {selectedAssets.includes(asset.id) && (
-                <>
-                  <label className="text-slate-300">Rentabilitat: {assetReturns[asset.id]}%</label>
-                  <input type="range" min={asset.minReturn} max={asset.maxReturn} step="0.5" value={assetReturns[asset.id]} onChange={(e) => setAssetReturns(prev => ({ ...prev, [asset.id]: parseFloat(e.target.value) }))} className="w-full h-1" />
-                  <div className="bg-purple-900/30 p-2 rounded">
-                    <div className="text-slate-400 text-[10px]">CAGR Any {yearsToHold}</div>
-                    <div className="text-sm font-bold text-white">{finalYear?.[asset.id]?.toFixed(2) || '0.00'}%</div>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
+          <div className="space-y-2">
+            {assets.map((asset) => (
+              <div key={asset.id} className="space-y-1 p-2 rounded" style={{ backgroundColor: `${asset.color}10` }}>
+                <label className="flex items-center space-x-1">
+                  <input type="checkbox" checked={selectedAssets.includes(asset.id)} onChange={() => toggleAsset(asset.id)} className="w-3 h-3" />
+                  <span className="font-semibold" style={{ color: asset.color }}>{asset.name}</span>
+                  {selectedAssets.includes(asset.id) && finalYear?.[asset.id] !== undefined && (
+                    <span className="ml-auto text-slate-400 text-[10px]">CAGR {yearsToHold}a: <span className="text-white font-bold">{finalYear[asset.id].toFixed(1)}%</span></span>
+                  )}
+                </label>
+                {selectedAssets.includes(asset.id) && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-300 whitespace-nowrap">Rent: {assetReturns[asset.id]}%</span>
+                      <input type="range" min={asset.minReturn} max={asset.maxReturn} step="0.5" value={assetReturns[asset.id]} onChange={(e) => setAssetReturns(prev => ({ ...prev, [asset.id]: parseFloat(e.target.value) }))} className="w-full h-1" />
+                    </div>
+                    {fullPeriodAvgReturns[asset.id] && (
+                      <div className="text-[10px] text-slate-400">Mitjana hist. ({fullPeriodAvgReturns[asset.id].from}-{fullPeriodAvgReturns[asset.id].to}): <span className="text-white">{fullPeriodAvgReturns[asset.id].avg.toFixed(1)}%</span></div>
+                    )}
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -308,23 +306,26 @@ const ETFBondsCAGR = () => {
       </div>
 
       <div className="bg-slate-800 rounded-xl p-4">
-        <h3 className="text-xl font-bold text-white mb-3">Resum Inversió</h3>
-        <div className="grid grid-cols-3 gap-3 text-sm">
-          <div className="bg-blue-900/30 p-3 rounded-lg">
-            <div className="text-slate-300">Inversió Inicial</div>
-            <div className="text-xl font-bold text-white">€{initialInvestment.toLocaleString()}</div>
-            <div className="text-xs text-slate-400">Cost compra: €{buyingCost.toFixed(2)}</div>
-          </div>
-          <div className="bg-green-900/30 p-3 rounded-lg">
-            <div className="text-slate-300">Inversió Neta</div>
-            <div className="text-xl font-bold text-white">€{netInitial.toLocaleString()}</div>
-            <div className="text-xs text-slate-400">Després de costos MyInvestor</div>
-          </div>
-          <div className="bg-purple-900/30 p-3 rounded-lg">
-            <div className="text-slate-300">Impostos</div>
-            <div className="text-xl font-bold text-white">25%</div>
-            <div className="text-xs text-slate-400">Impost Societats sobre guanys</div>
-          </div>
+        <h3 className="text-xl font-bold text-white mb-3">Resum Inversió (simulació {yearsToHold} anys)</h3>
+        <div className="grid grid-cols-2 gap-3 text-sm">
+          {selectedAssets.map(assetId => {
+            const asset = assets.find(a => a.id === assetId);
+            if (!asset || finalYear?.[assetId] === undefined) return null;
+            const annualReturn = assetReturns[assetId] / 100;
+            const netInv = initialInvestment - buyingCost;
+            const grossValue = netInv * Math.pow(1 + annualReturn, yearsToHold);
+            const sellingCost = calculateMyInvestorCost(grossValue);
+            const capitalGain = grossValue - initialInvestment;
+            const tax = capitalGain > 0 ? capitalGain * 0.25 : 0;
+            const netFinal = grossValue - sellingCost - tax;
+            return (
+              <div key={`sim-${assetId}`} className="p-3 rounded-lg" style={{ backgroundColor: `${asset.color}15`, borderLeft: `3px solid ${asset.color}` }}>
+                <div className="font-semibold text-white text-sm">{asset.name}</div>
+                <div className="text-lg font-bold text-white">€{Math.round(netFinal).toLocaleString()}</div>
+                <div className="text-[10px] text-slate-400">CAGR net: {finalYear[assetId].toFixed(2)}% | IS: €{Math.round(tax).toLocaleString()} | Guany: €{Math.round(netFinal - initialInvestment).toLocaleString()}</div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

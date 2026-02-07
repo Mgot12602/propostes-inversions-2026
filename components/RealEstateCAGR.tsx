@@ -233,6 +233,17 @@ const RealEstateCAGR = () => {
     };
   }, [purchaseYear]);
 
+  const fullPeriodAvgAppreciation = useMemo(() => {
+    const years = Object.keys(historicalPriceM2).map(Number).sort((a, b) => a - b);
+    let sum = 0;
+    let count = 0;
+    for (let i = 1; i < years.length; i++) {
+      sum += ((historicalPriceM2[years[i]] - historicalPriceM2[years[i - 1]]) / historicalPriceM2[years[i - 1]]) * 100;
+      count++;
+    }
+    return { avg: count > 0 ? sum / count : 0, from: years[0], to: years[years.length - 1] };
+  }, []);
+
   const buyingCosts = calculateBuyingCosts();
   const yearlyData = calculateYearlyData();
 
@@ -306,9 +317,14 @@ const RealEstateCAGR = () => {
             {hasAgencySale && <input type="range" min="1" max="5" step="0.5" value={agentCommissionPct} onChange={(e) => setAgentCommissionPct(parseFloat(e.target.value))} className="w-full h-1" />}
             <label className="text-slate-300">Revalorització: {appreciationRate}%</label>
             <input type="range" min="2" max="9" step="0.5" value={appreciationRate} onChange={(e) => setAppreciationRate(parseFloat(e.target.value))} className="w-full h-1" />
-            <div className="bg-purple-900/30 p-2 rounded mt-2">
+            <div className="text-[10px] text-slate-400">Mitjana hist. ({fullPeriodAvgAppreciation.from}-{fullPeriodAvgAppreciation.to}): <span className="text-white">{fullPeriodAvgAppreciation.avg.toFixed(1)}%</span></div>
+            <div className="bg-purple-900/30 p-2 rounded mt-1">
               <div className="text-slate-400 text-[10px]">CAGR</div>
               <div className="text-lg font-bold text-white">{finalYear?.cagr.toFixed(2)}%</div>
+            </div>
+            <div className="bg-amber-900/30 p-2 rounded">
+              <div className="text-slate-400 text-[10px]">IS 25% sobre plusvàlua</div>
+              <div className="text-[10px] text-slate-300">Només sobre guany (venda - compra)</div>
             </div>
           </div>
         </div>
@@ -332,24 +348,31 @@ const RealEstateCAGR = () => {
       </div>
 
       <div className="bg-slate-800 rounded-xl p-4">
-        <h3 className="text-xl font-bold text-white mb-3">Resum Inversió</h3>
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-blue-900/30 p-3 rounded-lg">
-            <div className="text-sm text-slate-300">Inversió Total</div>
-            <div className="text-xl font-bold text-white">€{buyingCosts.totalInvestment.toLocaleString()}</div>
-            <div className="text-xs text-slate-400 mt-1">Preu + impostos + despeses</div>
-          </div>
-          <div className="bg-green-900/30 p-3 rounded-lg">
-            <div className="text-sm text-slate-300">Riquesa Acumulada (Any {yearsToHold})</div>
-            <div className="text-xl font-bold text-white">€{finalYear?.accumulatedWealth.toLocaleString()}</div>
-            <div className="text-xs text-slate-400 mt-1">Valor propietat + fluxos nets</div>
-          </div>
-          <div className="bg-purple-900/30 p-3 rounded-lg">
-            <div className="text-sm text-slate-300">CAGR Real</div>
-            <div className="text-xl font-bold text-white">{finalYear?.cagr.toFixed(2)}%</div>
-            <div className="text-xs text-slate-400 mt-1">Creixement anual compost</div>
-          </div>
-        </div>
+        <h3 className="text-xl font-bold text-white mb-3">Resum Inversió (simulació {yearsToHold} anys)</h3>
+        {finalYear && (() => {
+          const finalPropertyValue = propertyPrice * Math.pow(1 + appreciationRate / 100, yearsToHold);
+          const capitalGain = finalPropertyValue - propertyPrice;
+          const isTax = capitalGain > 0 ? capitalGain * 0.25 : 0;
+          return (
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-blue-900/30 p-3 rounded-lg">
+                <div className="text-sm text-slate-300">Inversió Total</div>
+                <div className="text-xl font-bold text-white">€{buyingCosts.totalInvestment.toLocaleString()}</div>
+                <div className="text-xs text-slate-400 mt-1">Preu + impostos + despeses</div>
+              </div>
+              <div className="bg-green-900/30 p-3 rounded-lg">
+                <div className="text-sm text-slate-300">Valor Final Net</div>
+                <div className="text-xl font-bold text-white">€{(finalYear.accumulatedWealth + buyingCosts.totalInvestment).toLocaleString()}</div>
+                <div className="text-xs text-slate-400 mt-1">IS plusvàlua: €{Math.round(isTax).toLocaleString()} | Guany net: €{finalYear.accumulatedWealth.toLocaleString()}</div>
+              </div>
+              <div className="bg-purple-900/30 p-3 rounded-lg">
+                <div className="text-sm text-slate-300">CAGR Net</div>
+                <div className="text-xl font-bold text-white">{finalYear.cagr.toFixed(2)}%</div>
+                <div className="text-xs text-slate-400 mt-1">Després de tots els costos i IS 25%</div>
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       <div className="bg-slate-800 rounded-xl p-4">
