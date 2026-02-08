@@ -146,22 +146,22 @@ const ETFBondsCAGR = () => {
     return years.filter(y => y >= investmentYear).map(year => {
       const point: Record<string, number | undefined> = { year };
 
-      if (year === investmentYear) {
-        selectedAssets.forEach(assetId => {
-          if (historicalReturns[assetId]?.[investmentYear] !== undefined) {
-            point[`${assetId}-cagr`] = 0;
-          }
-        });
-        return point;
-      }
-
       selectedAssets.forEach(assetId => {
         const assetData = historicalReturns[assetId];
-        if (!assetData || assetData[investmentYear] === undefined) return;
+        if (!assetData) return;
+
+        const assetYears = Object.keys(assetData).map(Number).sort((a, b) => a - b);
+        const assetStart = Math.max(investmentYear, assetYears[0]);
+
+        if (year < assetStart) return;
+        if (year === assetStart) {
+          point[`${assetId}-cagr`] = 0;
+          return;
+        }
 
         let cumulativeGrowth = 1;
         let allDataAvailable = true;
-        for (let y = investmentYear; y < year; y++) {
+        for (let y = assetStart; y < year; y++) {
           const ret = assetData[y];
           if (ret === undefined) { allDataAvailable = false; break; }
           cumulativeGrowth *= (1 + ret / 100);
@@ -175,7 +175,7 @@ const ETFBondsCAGR = () => {
         const sellingCost = grossFinal * sellingCostPct;
         const netFinal = grossFinal - tax - sellingCost;
 
-        const elapsed = year - investmentYear;
+        const elapsed = year - assetStart;
         const cagr = ((netFinal / 1) ** (1 / elapsed) - 1) * 100;
         point[`${assetId}-cagr`] = cagr;
       });
@@ -185,12 +185,16 @@ const ETFBondsCAGR = () => {
   }, [selectedAssets, investmentYear]);
 
   const fullPeriodAvgReturns = useMemo(() => {
-    const result: Record<string, { avg: number; from: number; to: number }> = {};
+    const result: Record<string, { cagr: number; from: number; to: number }> = {};
     Object.entries(historicalReturns).forEach(([assetId, data]) => {
       const years = Object.keys(data).map(Number).sort((a, b) => a - b);
-      if (years.length === 0) return;
-      const sum = years.reduce((acc, y) => acc + data[y], 0);
-      result[assetId] = { avg: sum / years.length, from: years[0], to: years[years.length - 1] };
+      if (years.length < 2) return;
+      let cumulative = 1;
+      for (const y of years) {
+        cumulative *= (1 + data[y] / 100);
+      }
+      const cagr = (Math.pow(cumulative, 1 / years.length) - 1) * 100;
+      result[assetId] = { cagr, from: years[0], to: years[years.length - 1] };
     });
     return result;
   }, []);
@@ -278,11 +282,11 @@ const ETFBondsCAGR = () => {
                 {selectedAssets.includes(asset.id) && (
                   <>
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-300 whitespace-nowrap">Rent: {assetReturns[asset.id]}%</span>
+                      <span className="text-slate-300 whitespace-nowrap">Retorn brut: {assetReturns[asset.id]}%</span>
                       <input type="range" min={asset.minReturn} max={asset.maxReturn} step="0.5" value={assetReturns[asset.id]} onChange={(e) => setAssetReturns(prev => ({ ...prev, [asset.id]: parseFloat(e.target.value) }))} className="w-full h-1" />
                     </div>
                     {fullPeriodAvgReturns[asset.id] && (
-                      <div className="text-[10px] text-slate-400">Mitjana hist. ({fullPeriodAvgReturns[asset.id].from}-{fullPeriodAvgReturns[asset.id].to}): <span className="text-white">{fullPeriodAvgReturns[asset.id].avg.toFixed(1)}%</span></div>
+                      <div className="text-[10px] text-slate-400">CAGR hist. ({fullPeriodAvgReturns[asset.id].from}-{fullPeriodAvgReturns[asset.id].to}): <span className="text-white">{fullPeriodAvgReturns[asset.id].cagr.toFixed(1)}%</span></div>
                     )}
                   </>
                 )}
@@ -394,20 +398,25 @@ const ETFBondsCAGR = () => {
               const asset = assets.find(a => a.id === assetId);
               const cagr = lastCompoundData[`${assetId}-cagr`] as number | undefined;
               if (!asset || cagr === undefined) return null;
-              const elapsed = 2024 - investmentYear;
-              const finalValue = initialInvestment * Math.pow(1 + cagr / 100, elapsed);
+
+              const assetYears = Object.keys(historicalReturns[assetId] || {}).map(Number).sort((a, b) => a - b);
+              const assetStart = Math.max(investmentYear, assetYears[0] || investmentYear);
+              const isExtrapolated = assetStart > investmentYear;
+              const totalElapsed = 2024 - investmentYear;
+              const finalValue = initialInvestment * Math.pow(1 + cagr / 100, totalElapsed);
+
               return (
                 <div key={`final-${assetId}`} className="p-3 rounded-lg" style={{ backgroundColor: `${asset.color}15`, borderLeft: `3px solid ${asset.color}` }}>
-                  <div className="text-slate-300 text-xs">{asset.name} ({investmentYear}-2024)</div>
+                  <div className="text-slate-300 text-xs">{asset.name} ({assetStart}-2024){isExtrapolated && ' *'}</div>
                   <div className="text-lg font-bold text-white">CAGR: {cagr.toFixed(2)}%</div>
-                  <div className="text-sm text-slate-300">€{initialInvestment.toLocaleString()} → €{Math.round(finalValue).toLocaleString()}</div>
+                  <div className="text-sm text-slate-300">€{initialInvestment.toLocaleString()} → €{Math.round(finalValue).toLocaleString()}{isExtrapolated && ' (extrapol.)'}</div>
                 </div>
               );
             })}
           </div>
         )}
         <div className="mt-2 p-2 bg-blue-900/30 rounded-lg border border-blue-500/30 text-xs text-slate-300">
-          <p><strong>CAGR net:</strong> Descomptant costos MyInvestor (0.12% compra + 0.12% venda) i IS 25% sobre guanys. Fonts: S&amp;P 500 total return (slickcharts.com), Nasdaq-100 total return amb dividends (upmyinterest.com), MSCI World net return USD (msci.com), MSCI World SRI net return USD (msci.com), Bloomberg US Agg Bond (upmyinterest.com). Inflació: INE (IPC Espanya).</p>
+          <p><strong>CAGR net:</strong> Descomptant costos MyInvestor (0.12% compra + 0.12% venda) i IS 25% sobre guanys. (*) Valor extrapol.: per actius amb dades des de data posterior, el valor final s&apos;extrapola aplicant el seu CAGR al període complet per permetre comparació. Fonts: S&amp;P 500 total return (slickcharts.com), Nasdaq-100 total return amb dividends (upmyinterest.com), MSCI World net return USD (msci.com), MSCI World SRI net return USD (msci.com), Bloomberg US Agg Bond (upmyinterest.com). Inflació: INE (IPC Espanya).</p>
         </div>
       </div>
 
