@@ -32,7 +32,7 @@ const historicalInflation: Record<number, number> = {
 };
 
 const RealEstateCAGR = () => {
-  const [propertyPrice, setPropertyPrice] = useState(300000);
+  const [totalInvestment, setTotalInvestment] = useState(300000);
   const [propertyType, setPropertyType] = useState<'second-hand' | 'new'>('second-hand');
   const [hasMortgage, setHasMortgage] = useState(false);
   const [loanAmount, setLoanAmount] = useState(200000);
@@ -57,8 +57,25 @@ const RealEstateCAGR = () => {
   const [appreciationRate, setAppreciationRate] = useState(5);
 
   const [purchaseYear, setPurchaseYear] = useState(2015);
-  const [historicalRentalYield, setHistoricalRentalYield] = useState(4.0);
-  const [historicalIsRented, setHistoricalIsRented] = useState(true);
+
+  const derivePropertyPrice = (budget: number): number => {
+    let mortgageCosts = 0;
+    if (hasMortgage) {
+      mortgageCosts = loanAmount * 0.01 + 400 + loanAmount * 0.015;
+    }
+    const fixedCosts = gestoriaFee + mortgageCosts;
+    const remaining = budget - fixedCosts;
+
+    let pctOverPrice: number;
+    if (propertyType === 'second-hand') {
+      pctOverPrice = 0.10 + notaryFeesPct / 100 + 0.002 + (hasLawyer ? lawyerFeesPct / 100 : 0);
+    } else {
+      pctOverPrice = 0.10 + 0.015 + notaryFeesPct / 100 + 0.002 + (hasLawyer ? lawyerFeesPct / 100 : 0);
+    }
+    return Math.max(0, remaining / (1 + pctOverPrice));
+  };
+
+  const propertyPrice = derivePropertyPrice(totalInvestment);
 
   const calculateBuyingCosts = () => {
     let itp = 0;
@@ -90,10 +107,11 @@ const RealEstateCAGR = () => {
     }
 
     const totalBuyingCosts = itp + iva + ajd + notaryFees + registryFees + lawyerFees + gestoriaFee + mortgageCosts;
-    const totalInvestment = propertyPrice + totalBuyingCosts;
 
     return { itp, iva, ajd, notaryFees, registryFees, lawyerFees, gestoriaFee, mortgageCosts, totalBuyingCosts, totalInvestment };
   };
+
+  const rentalYieldPct = propertyPrice > 0 ? (monthlyRent * 12) / propertyPrice * 100 : 0;
 
   const calculateYearlyData = (): YearData[] => {
     const buyingCosts = calculateBuyingCosts();
@@ -152,7 +170,7 @@ const RealEstateCAGR = () => {
     const years = Object.keys(historicalPriceM2).map(Number).sort((a, b) => a - b);
     const buyingCostsPct = propertyType === 'second-hand' ? 0.10 : 0.115;
     const sellingCostsPct = (hasAgencySale ? agentCommissionPct / 100 : 0) + 0.003 + 0.001;
-    const expenseRatioPct = 0.02;
+    const expenseRatioPct = (ibiRate / 100) + (maintenancePct / 100) + (communityFees * 12 + insurance) / (propertyPrice > 0 ? propertyPrice : 1);
 
     return years.map((year, idx) => {
       const price = historicalPriceM2[year];
@@ -166,10 +184,10 @@ const RealEstateCAGR = () => {
         const elapsed = year - purchaseYear;
 
         let accumulatedNetRental = 0;
-        if (historicalIsRented) {
+        if (isRented) {
           for (let y = purchaseYear + 1; y <= year; y++) {
             const priceAtY = historicalPriceM2[y] || price;
-            const grossRental = priceAtY * (historicalRentalYield / 100);
+            const grossRental = priceAtY * (rentalYieldPct / 100);
             const expenses = priceAtY * expenseRatioPct;
             const netIncome = grossRental - expenses;
             const taxOnIncome = netIncome > 0 ? netIncome * 0.25 : 0;
@@ -201,7 +219,7 @@ const RealEstateCAGR = () => {
         finalValuePerM2
       };
     });
-  }, [purchaseYear, propertyType, agentCommissionPct, hasAgencySale, historicalRentalYield, historicalIsRented]);
+  }, [purchaseYear, propertyType, agentCommissionPct, hasAgencySale, isRented, rentalYieldPct, ibiRate, maintenancePct, communityFees, insurance, propertyPrice]);
 
   const historicalAverages = useMemo(() => {
     const years = Object.keys(historicalPriceM2).map(Number).sort((a, b) => a - b);
@@ -258,8 +276,9 @@ const RealEstateCAGR = () => {
 
         <div className="grid grid-cols-4 gap-2 text-xs mb-3">
           <div className="space-y-1">
-            <label className="text-slate-300">Preu: €{propertyPrice.toLocaleString()}</label>
-            <input type="range" min="100000" max="1000000" step="10000" value={propertyPrice} onChange={(e) => setPropertyPrice(parseFloat(e.target.value))} className="w-full h-1" />
+            <label className="text-slate-300">Inversió: €{totalInvestment.toLocaleString()}</label>
+            <input type="range" min="100000" max="1000000" step="10000" value={totalInvestment} onChange={(e) => setTotalInvestment(parseFloat(e.target.value))} className="w-full h-1" />
+            <div className="text-[10px] text-slate-400">Preu vivenda: €{Math.round(propertyPrice).toLocaleString()}</div>
             <select value={propertyType} onChange={(e) => setPropertyType(e.target.value as 'second-hand' | 'new')} className="w-full px-2 py-1 bg-slate-700 text-white rounded text-xs">
               <option value="second-hand">2a mà</option>
               <option value="new">Nova</option>
@@ -357,12 +376,12 @@ const RealEstateCAGR = () => {
             <div className="grid grid-cols-3 gap-3">
               <div className="bg-blue-900/30 p-3 rounded-lg">
                 <div className="text-sm text-slate-300">Inversió Total</div>
-                <div className="text-xl font-bold text-white">€{buyingCosts.totalInvestment.toLocaleString()}</div>
-                <div className="text-xs text-slate-400 mt-1">Preu + impostos + despeses</div>
+                <div className="text-xl font-bold text-white">€{totalInvestment.toLocaleString()}</div>
+                <div className="text-xs text-slate-400 mt-1">Vivenda: €{Math.round(propertyPrice).toLocaleString()} + costos: €{Math.round(buyingCosts.totalBuyingCosts).toLocaleString()}</div>
               </div>
               <div className="bg-green-900/30 p-3 rounded-lg">
                 <div className="text-sm text-slate-300">Valor Final Net</div>
-                <div className="text-xl font-bold text-white">€{(finalYear.accumulatedWealth + buyingCosts.totalInvestment).toLocaleString()}</div>
+                <div className="text-xl font-bold text-white">€{(finalYear.accumulatedWealth + totalInvestment).toLocaleString()}</div>
                 <div className="text-xs text-slate-400 mt-1">IS plusvàlua: €{Math.round(isTax).toLocaleString()} | Guany net: €{finalYear.accumulatedWealth.toLocaleString()}</div>
               </div>
               <div className="bg-purple-900/30 p-3 rounded-lg">
@@ -376,12 +395,12 @@ const RealEstateCAGR = () => {
       </div>
 
       <div className="bg-slate-800 rounded-xl p-4">
-        <h3 className="text-xl font-bold text-white mb-3">Costos de Compra Detallats</h3>
+        <h3 className="text-xl font-bold text-white mb-3">Desglossament Inversió</h3>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="space-y-2">
             <div className="flex justify-between text-slate-300">
-              <span>Preu propietat:</span>
-              <span className="font-semibold text-white">€{propertyPrice.toLocaleString()}</span>
+              <span>Preu vivenda (derivat):</span>
+              <span className="font-semibold text-white">€{Math.round(propertyPrice).toLocaleString()}</span>
             </div>
             <div className="flex justify-between text-slate-300">
               <span>{propertyType === 'second-hand' ? 'ITP (10%)' : 'IVA (10%)'}:</span>
@@ -419,9 +438,13 @@ const RealEstateCAGR = () => {
                 <span className="font-semibold text-white">€{buyingCosts.mortgageCosts.toLocaleString()}</span>
               </div>
             )}
+            <div className="flex justify-between text-slate-300">
+              <span>Total costos:</span>
+              <span className="font-semibold text-white">€{Math.round(buyingCosts.totalBuyingCosts).toLocaleString()}</span>
+            </div>
             <div className="flex justify-between text-white font-bold border-t border-slate-600 pt-2">
-              <span>TOTAL COSTOS:</span>
-              <span>€{buyingCosts.totalBuyingCosts.toLocaleString()}</span>
+              <span>INVERSIÓ TOTAL:</span>
+              <span>€{totalInvestment.toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -435,16 +458,7 @@ const RealEstateCAGR = () => {
               <label className="text-slate-300">Any compra: {purchaseYear}</label>
               <input type="range" min="1995" max="2023" step="1" value={purchaseYear} onChange={(e) => setPurchaseYear(parseInt(e.target.value))} className="w-24 h-1" />
             </div>
-            <label className="flex items-center space-x-1">
-              <input type="checkbox" checked={historicalIsRented} onChange={(e) => setHistoricalIsRented(e.target.checked)} className="w-3 h-3" />
-              <span className="text-slate-300">Lloguer</span>
-            </label>
-            {historicalIsRented && (
-              <div className="flex items-center gap-2">
-                <label className="text-slate-300">Yield: {historicalRentalYield}%</label>
-                <input type="range" min="2" max="7" step="0.5" value={historicalRentalYield} onChange={(e) => setHistoricalRentalYield(parseFloat(e.target.value))} className="w-20 h-1" />
-              </div>
-            )}
+            <span className="text-slate-400">{isRented ? `Lloguer yield ${rentalYieldPct.toFixed(1)}%` : 'Sense lloguer'}</span>
           </div>
         </div>
         <ResponsiveContainer width="100%" height={350}>
@@ -491,7 +505,7 @@ const RealEstateCAGR = () => {
         )}
         <div className="mt-2 p-2 bg-blue-900/30 rounded-lg border border-blue-500/30 text-xs text-slate-300">
           <p><strong>Font:</strong> Ministerio de Transportes - Valor tasado de vivienda libre (€/m²). Inflació: INE (IPC).</p>
-          <p className="mt-1"><strong>Línia taronja:</strong> Variació interanual del preu/m². <strong>Línia verda:</strong> CAGR net (retorn total anualitzat){historicalIsRented ? `, incloent lloguer brut ${historicalRentalYield}% - ~2% despeses, net d'IS 25%` : ' sense lloguer'}. Descompta costos compra ({propertyType === 'second-hand' ? '10% ITP' : '11.5% IVA+AJD'}), venda ({hasAgencySale ? `${agentCommissionPct}%` : '0%'} comissió + notari/registre) i 25% IS sobre plusvàlua.</p>
+          <p className="mt-1"><strong>Línia taronja:</strong> Variació interanual del preu/m². <strong>Línia verda:</strong> CAGR net (retorn total anualitzat){isRented ? `, incloent lloguer yield ${rentalYieldPct.toFixed(1)}% - despeses, net d'IS 25%` : ' sense lloguer'}. Descompta costos compra ({propertyType === 'second-hand' ? '10% ITP' : '11.5% IVA+AJD'}), venda ({hasAgencySale ? `${agentCommissionPct}%` : '0%'} comissió + notari/registre) i 25% IS sobre plusvàlua.</p>
         </div>
       </div>
 
@@ -532,9 +546,10 @@ const RealEstateCAGR = () => {
         <div className="text-sm text-slate-300 space-y-2">
           <p>El CAGR mostra el creixement anual compost real de la teva inversió, tenint en compte:</p>
           <ul className="list-disc list-inside space-y-1 ml-4">
-            <li>La inversió inicial total (preu + tots els impostos i despeses de compra)</li>
-            <li>El valor actual de la propietat (amb revalorització del {appreciationRate}% anual)</li>
-            <li>Tots els fluxos de caixa nets acumulats (lloguers - despeses - impostos)</li>
+            <li>Inversió total = pressupost (inclou preu vivenda + impostos + despeses)</li>
+            <li>Revalorització de la propietat ({appreciationRate}% anual)</li>
+            <li>Fluxos de caixa nets acumulats (lloguers - despeses - IS 25%)</li>
+            <li>IS 25% sobre plusvàlua en venda</li>
             {hasAgencySale && <li>Comissió immobiliària de venda ({agentCommissionPct}%)</li>}
           </ul>
           <p className="mt-2"><strong>Fórmula:</strong> CAGR = ((Riquesa Final / Inversió Inicial)^(1/anys) - 1) × 100</p>
