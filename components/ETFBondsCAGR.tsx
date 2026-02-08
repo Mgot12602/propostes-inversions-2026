@@ -73,7 +73,7 @@ const ETFBondsCAGR = () => {
     { id: 'bonds-agg', name: 'Bloomberg US Agg Bond', color: '#6b7280', defaultReturn: 3.5, minReturn: 0, maxReturn: 8 }
   ];
 
-  const [initialInvestment, setInitialInvestment] = useState(50000);
+  const [initialInvestment, setInitialInvestment] = useState(300000);
   const [yearsToHold, setYearsToHold] = useState(20);
   const [selectedAssets, setSelectedAssets] = useState<string[]>(['msci-world', 'nasdaq', 'sp500', 'msci-screened', 'bonds-agg']);
   const [assetReturns, setAssetReturns] = useState<Record<string, number>>({
@@ -297,7 +297,7 @@ const ETFBondsCAGR = () => {
       </div>
 
       <div className="bg-slate-800 rounded-xl p-3">
-        <h3 className="text-lg font-bold text-white mb-2">Comparativa CAGR (simulació)</h3>
+        <h3 className="text-lg font-bold text-white mb-2">Comparativa CAGR Net</h3>
         <ResponsiveContainer width="100%" height={350}>
           <LineChart data={yearlyData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
@@ -367,7 +367,7 @@ const ETFBondsCAGR = () => {
 
       <div className="bg-slate-800 rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-xl font-bold text-white">CAGR Compost Real des de Any d&apos;Inversió</h3>
+          <h3 className="text-xl font-bold text-white">CAGR Net des de Any d&apos;Inversió</h3>
           <div className="flex items-center gap-2 text-xs">
             <label className="text-slate-300">Any inversió: {investmentYear}</label>
             <input type="range" min="1995" max="2023" step="1" value={investmentYear} onChange={(e) => setInvestmentYear(parseInt(e.target.value))} className="w-32 h-1" />
