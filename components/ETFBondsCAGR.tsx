@@ -79,7 +79,7 @@ const ETFBondsCAGR = () => {
   const [assetReturns, setAssetReturns] = useState<Record<string, number>>({
     'msci-world': 8.0, 'nasdaq': 12.0, 'sp500': 10.0, 'msci-screened': 8.0, 'bonds-agg': 3.5
   });
-  const [investmentYear, setInvestmentYear] = useState(2004);
+  const [investmentYear, setInvestmentYear] = useState(1995);
 
   const calculateMyInvestorCost = (amount: number): number => {
     const cost = amount * 0.0012;
@@ -278,14 +278,11 @@ const ETFBondsCAGR = () => {
                 <label className="flex items-center space-x-1">
                   <input type="checkbox" checked={selectedAssets.includes(asset.id)} onChange={() => toggleAsset(asset.id)} className="w-3 h-3" />
                   <span className="font-semibold" style={{ color: asset.color }}>{asset.name}</span>
-                  {selectedAssets.includes(asset.id) && finalYear?.[asset.id] !== undefined && (
-                    <span className="ml-auto text-slate-400 text-[10px]">CAGR {yearsToHold}a: <span className="text-white font-bold">{finalYear[asset.id].toFixed(1)}%</span></span>
-                  )}
                 </label>
                 {selectedAssets.includes(asset.id) && (
                   <>
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-300 whitespace-nowrap">Retorn brut: {assetReturns[asset.id]}%</span>
+                      <span className="text-slate-300 whitespace-nowrap">Revalorització interanual (CAGR brut): {assetReturns[asset.id]}%</span>
                       <input type="range" min={asset.minReturn} max={asset.maxReturn} step="0.5" value={assetReturns[asset.id]} onChange={(e) => setAssetReturns(prev => ({ ...prev, [asset.id]: parseFloat(e.target.value) }))} className="w-full h-1" />
                     </div>
                     {fullPeriodAvgReturns[asset.id] && (
