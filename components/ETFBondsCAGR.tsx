@@ -19,58 +19,67 @@ interface YearData {
 
 const historicalReturns: Record<string, Record<number, number>> = {
   'msci-world': {
-    2004: 15.2, 2005: 9.5, 2006: 20.1, 2007: 9.0, 2008: -40.3,
-    2009: 30.0, 2010: 11.8, 2011: -5.0, 2012: 15.8, 2013: 26.7,
-    2014: 4.9, 2015: -0.3, 2016: 7.5, 2017: 22.4, 2018: -8.2,
-    2019: 27.7, 2020: 15.9, 2021: 21.8, 2022: -17.7, 2023: 23.8, 2024: 18.2
+    2001: -16.52, 2002: -19.54, 2003: 33.76, 2004: 15.25, 2005: 10.02,
+    2006: 20.65, 2007: 9.57, 2008: -40.33, 2009: 30.79, 2010: 12.34,
+    2011: -5.54, 2012: 15.83, 2013: 26.68, 2014: 4.94, 2015: -0.87,
+    2016: 7.51, 2017: 22.40, 2018: -8.71, 2019: 27.67, 2020: 15.90,
+    2021: 21.82, 2022: -18.14, 2023: 23.79, 2024: 18.67
   },
   'nasdaq': {
-    2004: 8.6, 2005: 1.4, 2006: 9.5, 2007: 19.2, 2008: -41.9,
-    2009: 43.9, 2010: 19.2, 2011: 2.7, 2012: 17.5, 2013: 38.3,
-    2014: 19.2, 2015: 9.7, 2016: 7.5, 2017: 32.0, 2018: -0.1,
-    2019: 38.7, 2020: 47.6, 2021: 26.6, 2022: -32.5, 2023: 54.8, 2024: 28.6
+    1995: 42.54, 1996: 42.54, 1997: 20.63, 1998: 85.30, 1999: 101.95,
+    2000: -36.11, 2001: -33.34, 2002: -37.37, 2003: 49.67, 2004: 10.54,
+    2005: 1.57, 2006: 7.14, 2007: 19.02, 2008: -41.73, 2009: 54.68,
+    2010: 20.14, 2011: 3.47, 2012: 18.12, 2013: 36.63, 2014: 19.18,
+    2015: 9.45, 2016: 7.10, 2017: 32.66, 2018: -0.12, 2019: 38.96,
+    2020: 48.40, 2021: 27.42, 2022: -32.54, 2023: 53.81, 2024: 25.88
   },
   'sp500': {
-    2004: 10.9, 2005: 4.9, 2006: 15.8, 2007: 5.5, 2008: -37.0,
-    2009: 26.5, 2010: 15.1, 2011: 2.1, 2012: 16.0, 2013: 32.4,
-    2014: 13.7, 2015: 1.4, 2016: 12.0, 2017: 21.8, 2018: -4.4,
-    2019: 31.5, 2020: 18.4, 2021: 28.7, 2022: -18.1, 2023: 26.3, 2024: 24.2
+    1995: 37.58, 1996: 22.96, 1997: 33.36, 1998: 28.58, 1999: 21.04,
+    2000: -9.10, 2001: -11.89, 2002: -22.10, 2003: 28.68, 2004: 10.88,
+    2005: 4.91, 2006: 15.79, 2007: 5.49, 2008: -37.00, 2009: 26.46,
+    2010: 15.06, 2011: 2.11, 2012: 16.00, 2013: 32.39, 2014: 13.69,
+    2015: 1.38, 2016: 11.96, 2017: 21.83, 2018: -4.38, 2019: 31.49,
+    2020: 18.40, 2021: 28.71, 2022: -18.11, 2023: 26.29, 2024: 25.02
   },
   'msci-screened': {
-    2016: 7.2, 2017: 21.8, 2018: -8.5, 2019: 27.2, 2020: 15.4,
-    2021: 21.3, 2022: -18.1, 2023: 23.2, 2024: 17.8
+    2015: 1.53, 2016: 7.08, 2017: 23.06, 2018: -6.83, 2019: 30.26,
+    2020: 20.70, 2021: 26.56, 2022: -23.13, 2023: 28.09, 2024: 13.96
   },
-  'bonds-aaa': {
-    2004: 7.3, 2005: 3.4, 2006: 1.2, 2007: 2.8, 2008: 8.5,
-    2009: 5.2, 2010: 4.1, 2011: 6.8, 2012: 7.2, 2013: 2.1,
-    2014: 8.5, 2015: 1.2, 2016: 3.4, 2017: 0.8, 2018: 1.5,
-    2019: 5.8, 2020: 4.1, 2021: -3.2, 2022: -16.2, 2023: 6.4, 2024: 3.2
+  'bonds-agg': {
+    1995: 18.5, 1996: 3.6, 1997: 9.7, 1998: 8.7, 1999: -0.8,
+    2000: 11.6, 2001: 8.4, 2002: 10.3, 2003: 4.1, 2004: 4.3,
+    2005: 2.4, 2006: 4.3, 2007: 7.0, 2008: 5.2, 2009: 5.9,
+    2010: 6.5, 2011: 7.8, 2012: 4.2, 2013: -2.0, 2014: 6.0,
+    2015: 0.5, 2016: 2.6, 2017: 3.5, 2018: 0.0, 2019: 8.7,
+    2020: 7.5, 2021: -1.5, 2022: -13.0, 2023: 5.5, 2024: 1.7
   }
 };
 
 const historicalInflation: Record<number, number> = {
-  2004: 3.0, 2005: 3.4, 2006: 3.5, 2007: 2.8, 2008: 4.1,
-  2009: -0.3, 2010: 1.8, 2011: 3.2, 2012: 2.4, 2013: 1.4,
-  2014: -0.2, 2015: -0.5, 2016: -0.2, 2017: 2.0, 2018: 1.7,
-  2019: 0.7, 2020: -0.3, 2021: 3.1, 2022: 8.4, 2023: 3.5, 2024: 2.8
+  1995: 4.7, 1996: 3.6, 1997: 2.0, 1998: 1.8, 1999: 2.3,
+  2000: 3.4, 2001: 3.6, 2002: 3.5, 2003: 3.0, 2004: 3.0,
+  2005: 3.4, 2006: 3.5, 2007: 2.8, 2008: 4.1, 2009: -0.3,
+  2010: 1.8, 2011: 3.2, 2012: 2.4, 2013: 1.4, 2014: -0.2,
+  2015: -0.5, 2016: -0.2, 2017: 2.0, 2018: 1.7, 2019: 0.7,
+  2020: -0.3, 2021: 3.1, 2022: 8.4, 2023: 3.5, 2024: 2.8
 };
 
 const ETFBondsCAGR = () => {
   const assets: AssetConfig[] = [
-    { id: 'msci-world', name: 'MSCI World', color: '#3b82f6', defaultReturn: 8.5, minReturn: 5, maxReturn: 12 },
-    { id: 'nasdaq', name: 'Nasdaq-100', color: '#10b981', defaultReturn: 13, minReturn: 8, maxReturn: 18 },
-    { id: 'sp500', name: 'S&P 500', color: '#f97316', defaultReturn: 10.5, minReturn: 6, maxReturn: 15 },
-    { id: 'msci-screened', name: 'MSCI World SRI', color: '#a855f7', defaultReturn: 7.5, minReturn: 4, maxReturn: 11 },
-    { id: 'bonds-aaa', name: 'Bons AAA EUR', color: '#6b7280', defaultReturn: 2.5, minReturn: 1, maxReturn: 5 }
+    { id: 'msci-world', name: 'MSCI World', color: '#3b82f6', defaultReturn: 8.0, minReturn: 4, maxReturn: 14 },
+    { id: 'nasdaq', name: 'Nasdaq-100', color: '#10b981', defaultReturn: 12.0, minReturn: 6, maxReturn: 20 },
+    { id: 'sp500', name: 'S&P 500', color: '#f97316', defaultReturn: 10.0, minReturn: 5, maxReturn: 16 },
+    { id: 'msci-screened', name: 'MSCI World SRI', color: '#a855f7', defaultReturn: 8.0, minReturn: 4, maxReturn: 14 },
+    { id: 'bonds-agg', name: 'Bloomberg US Agg Bond', color: '#6b7280', defaultReturn: 3.5, minReturn: 0, maxReturn: 8 }
   ];
 
   const [initialInvestment, setInitialInvestment] = useState(50000);
   const [yearsToHold, setYearsToHold] = useState(20);
-  const [selectedAssets, setSelectedAssets] = useState<string[]>(['msci-world', 'nasdaq', 'sp500', 'msci-screened', 'bonds-aaa']);
+  const [selectedAssets, setSelectedAssets] = useState<string[]>(['msci-world', 'nasdaq', 'sp500', 'msci-screened', 'bonds-agg']);
   const [assetReturns, setAssetReturns] = useState<Record<string, number>>({
-    'msci-world': 8.5, 'nasdaq': 13, 'sp500': 10.5, 'msci-screened': 7.5, 'bonds-aaa': 2.5
+    'msci-world': 8.0, 'nasdaq': 12.0, 'sp500': 10.0, 'msci-screened': 8.0, 'bonds-agg': 3.5
   });
-  const [investmentYear, setInvestmentYear] = useState(2010);
+  const [investmentYear, setInvestmentYear] = useState(2004);
 
   const calculateMyInvestorCost = (amount: number): number => {
     const cost = amount * 0.0012;
@@ -330,7 +339,7 @@ const ETFBondsCAGR = () => {
       </div>
 
       <div className="bg-slate-800 rounded-xl p-4">
-        <h3 className="text-xl font-bold text-white mb-3">Variació Interanual Històrica (2004-2024)</h3>
+        <h3 className="text-xl font-bold text-white mb-3">Variació Interanual Històrica</h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={historicalYoYData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#475569" />
@@ -357,7 +366,7 @@ const ETFBondsCAGR = () => {
           <h3 className="text-xl font-bold text-white">CAGR Compost Real des de Any d&apos;Inversió</h3>
           <div className="flex items-center gap-2 text-xs">
             <label className="text-slate-300">Any inversió: {investmentYear}</label>
-            <input type="range" min="2004" max="2023" step="1" value={investmentYear} onChange={(e) => setInvestmentYear(parseInt(e.target.value))} className="w-32 h-1" />
+            <input type="range" min="1995" max="2023" step="1" value={investmentYear} onChange={(e) => setInvestmentYear(parseInt(e.target.value))} className="w-32 h-1" />
           </div>
         </div>
         <ResponsiveContainer width="100%" height={300}>
@@ -398,7 +407,7 @@ const ETFBondsCAGR = () => {
           </div>
         )}
         <div className="mt-2 p-2 bg-blue-900/30 rounded-lg border border-blue-500/30 text-xs text-slate-300">
-          <p><strong>CAGR net:</strong> Descomptant costos MyInvestor (0.12% compra + 0.12% venda) i Impost de Societats (25% sobre guanys). Mostra la rendibilitat anual composta real si haguéssim invertit al {investmentYear}. Font inflació: INE (IPC).</p>
+          <p><strong>CAGR net:</strong> Descomptant costos MyInvestor (0.12% compra + 0.12% venda) i IS 25% sobre guanys. Fonts: S&amp;P 500 total return (slickcharts.com), Nasdaq-100 total return amb dividends (upmyinterest.com), MSCI World net return USD (msci.com), MSCI World SRI net return USD (msci.com), Bloomberg US Agg Bond (upmyinterest.com). Inflació: INE (IPC Espanya).</p>
         </div>
       </div>
 
