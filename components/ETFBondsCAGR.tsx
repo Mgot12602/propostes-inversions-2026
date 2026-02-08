@@ -185,16 +185,19 @@ const ETFBondsCAGR = () => {
   }, [selectedAssets, investmentYear]);
 
   const fullPeriodAvgReturns = useMemo(() => {
-    const result: Record<string, { cagr: number; from: number; to: number }> = {};
+    const result: Record<string, { cagr: number; avg: number; from: number; to: number }> = {};
     Object.entries(historicalReturns).forEach(([assetId, data]) => {
       const years = Object.keys(data).map(Number).sort((a, b) => a - b);
       if (years.length < 2) return;
       let cumulative = 1;
+      let sum = 0;
       for (const y of years) {
         cumulative *= (1 + data[y] / 100);
+        sum += data[y];
       }
       const cagr = (Math.pow(cumulative, 1 / years.length) - 1) * 100;
-      result[assetId] = { cagr, from: years[0], to: years[years.length - 1] };
+      const avg = sum / years.length;
+      result[assetId] = { cagr, avg, from: years[0], to: years[years.length - 1] };
     });
     return result;
   }, []);
@@ -286,7 +289,7 @@ const ETFBondsCAGR = () => {
                       <input type="range" min={asset.minReturn} max={asset.maxReturn} step="0.5" value={assetReturns[asset.id]} onChange={(e) => setAssetReturns(prev => ({ ...prev, [asset.id]: parseFloat(e.target.value) }))} className="w-full h-1" />
                     </div>
                     {fullPeriodAvgReturns[asset.id] && (
-                      <div className="text-[10px] text-slate-400">CAGR hist. ({fullPeriodAvgReturns[asset.id].from}-{fullPeriodAvgReturns[asset.id].to}): <span className="text-white">{fullPeriodAvgReturns[asset.id].cagr.toFixed(1)}%</span></div>
+                      <div className="text-[10px] text-slate-400">Hist. ({fullPeriodAvgReturns[asset.id].from}-{fullPeriodAvgReturns[asset.id].to}): CAGR <span className="text-white">{fullPeriodAvgReturns[asset.id].cagr.toFixed(1)}%</span> · Mitjana <span className="text-white">{fullPeriodAvgReturns[asset.id].avg.toFixed(1)}%</span></div>
                     )}
                   </>
                 )}
