@@ -40,7 +40,7 @@ export const investmentData: InvestmentCategory[] = [
         title: 'ETFs i Bons - Comparativa Global',
         category: 'fons-indexats',
         description: 'Inversió diversificada en fons indexats (MSCI World, Nasdaq-100, S&P 500, MSCI World SRI) i bons AAA. Anàlisi comparativa amb dades històriques reals (2004-2024) i costos MyInvestor.',
-        investment: '€50.000',
+        investment: '€300.000',
         annualReturn: '6-12% (ETFs) / 2-3% (Bons)',
         pros: [
           'Alta diversificació geogràfica i sectorial',
